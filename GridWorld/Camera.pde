@@ -29,7 +29,14 @@
             location.x += worldCenter.x;
             location.y += worldCenter.y;
             
-            zoomLevel = .33;
+            zoomLevel = .5;
+            
+            
+            
+            // ----
+            location.x = 388;
+            location.y = 13.33;
+            zoomLevel = 0.46;
         }
         
         void draw() {

@@ -12,7 +12,7 @@
     void setup() {
         noStroke();
         smooth();
-        frameRate(60);
+        frameRate(6000);
         // ----
         world = new World();
         camera = new Camera(world);

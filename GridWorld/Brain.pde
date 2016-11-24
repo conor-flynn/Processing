@@ -5,9 +5,9 @@ class Brain {
     ArrayList<float[]> hiddenPlus;
     float[] outputVals;
     
-    int numInputs = 22;
+    int numInputs = 21;
     int numHidden = 16;
-    int numOutputs = 6;
+    int numOutputs = 4;
       // 0: north
       // 1: south
       // 2: east
@@ -72,7 +72,13 @@ class Brain {
         return 1.0 / denom;
     }
     
-    int process(ArrayList<Boolean> inputs) {        
+    float negsig(float input) {
+       float val = sig(input); 
+       val *= 2;
+       return val-1;
+    }
+    
+    void process(ArrayList<Float> inputs) {        
         
         for (int i = 0; i < numHidden; i++) {
             hiddenVals[i] = 0;
@@ -82,46 +88,24 @@ class Brain {
         }
         for (int i = 0; i < inputs.size(); i++) {
             for (int j = 0; j < numHidden; j++) {
+                float val = inputs.get(i);
                 float[] links = inputPlus.get(i);
                 for (int k = 0; k < links.length; k++) {
-                    float result = links[k];
+                    float result = links[k] * val;
                     hiddenVals[k] += result;
                 }
             }
         }
         for (int i = 0; i < hiddenVals.length; i++) {
           
-            hiddenVals[i] = sig(hiddenVals[i]);
-            float val = hiddenVals[i];
-            // TODO: multiple val through instead of being on/off
-            if (val < 0.5f) val = 0;
-            else val = 1;
-            
+            hiddenVals[i] = negsig(hiddenVals[i]);
+            float val = hiddenVals[i];            
             for (int j = 0; j < numOutputs; j++) {
                 outputVals[j] += val * hiddenPlus.get(i)[j];
             }
         }
         for (int i = 0; i < outputVals.length; i++) {
-            outputVals[i] = sig(outputVals[i]);
+            outputVals[i] = negsig(outputVals[i]);
         }
-        float threshold = 0.5;
-        int highest = -1;
-        float temp = threshold; // The chosen 
-        for (int i = 0; i < outputVals.length; i++) {
-            if (outputVals[i] > temp) {
-                temp = outputVals[i];
-                highest = i;
-            }
-        }
-        if (highest == -1) {
-            return -1;
-        }
-        if (temp <= threshold) {
-            return -1;
-        }
-        if (temp > threshold) {
-            return highest;
-        }
-        return 0;
     }
 }

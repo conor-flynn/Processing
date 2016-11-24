@@ -1,11 +1,12 @@
 class Creature {
   
     World world;
+    Species species;
   
     Brain brain;
   
     Tile tile;
-    color col;
+    float red,green,blue;
     
     float life;
     int age;
@@ -15,18 +16,23 @@ class Creature {
     float minimal_life;
     
     
-    public Creature(World _world) {
+    public Creature(World world, Species species) {
+        this.world = world;
+        this.species = species;
       
         starting_life = 1;
         minimal_life = starting_life * 0.8;
-      
-        tile = null;
-        col = -1;
         brain = new Brain();
         life = starting_life;
         age = 0;
         markedForDeath = false;
-        world = _world;
+        red = green = blue = -1;
+    }
+    
+    void killCreature() {
+        if (markedForDeath) return;
+        markedForDeath = true;
+        species.preGrave.add(this);
     }
     
     void update() {
@@ -39,25 +45,25 @@ class Creature {
         }
         
         if (life <= 0) {
-            world.killCreature(this);
+            killCreature();
             return;
-        } else if (age > 1200) {
-            world.killCreature(this);
+        } else if (age > 6000) {
+            killCreature();
             return;
         }
         
-        ArrayList<Boolean> inputs = new ArrayList<Boolean>();
+        ArrayList<Float> inputs = new ArrayList<Float>();
         for (int i = 0; i < 8; i++) {
             if (tile.neighbors.containsKey(i)) {
                 Tile target = tile.neighbors.get(i);
                 
                 if (target.creature != null) {
-                    inputs.add(true);
+                    inputs.add(1.0);
                 } else {
-                    inputs.add(false);
+                    inputs.add(0.0);
                 }
             } else {
-                inputs.add(true);
+                inputs.add(-1.0);
             }
         }
         for (int i = 0; i < 8; i++) {
@@ -65,81 +71,106 @@ class Creature {
                 Tile target = tile.neighbors.get(i);
                 if (target instanceof Food) {
                     Food food = (Food)target;
-                    if (food.amount > 0.6) {
-                        inputs.add(true);
-                    } else {
-                        inputs.add(false);
-                    }
+                    inputs.add(food.amount);
+                } else {
+                    inputs.add(0.0);
                 }
             } else {
-                inputs.add(false);
+                inputs.add(-1.0);
             }
         }
-        boolean littleLife = false;
-        if (life > 0.4) littleLife = true;
-        boolean greaterLife = false;
-        if (life > starting_life) greaterLife = true;
-        inputs.add(littleLife);
-        inputs.add(greaterLife);
-        inputs.add((random(1) > 0.5));
-        inputs.add((random(1) > 0.5));
-        inputs.add((random(1) > 0.5));
-        inputs.add((random(1) > 0.5));
+        inputs.add(sig(life));
+        inputs.add((random(1) > 0.95) ? 1.0 : 0.0);
+        inputs.add((random(1) > 0.05) ? 0.0 : 1.0);
+        inputs.add(random(1));
+        inputs.add(1.0);        
         
-        int choice = brain.process(inputs);
-        
-        switch (choice) {
-            case -1:
-                break;
-            case 0:
-                tryMove(Direction.NORTH.val());
-                break;
-            case 1:
-                tryMove(Direction.SOUTH.val());
-                break;
-            case 2:
-                tryMove(Direction.EAST.val());
-                break;
-            case 3:
-                tryMove(Direction.WEST.val());
-                break;
-            case 4:
-                tryEat();
-                break;
-            case 5:
-                tryReproduce();
-                break;
-            default:
-                break;
+        brain.process(inputs);
+        float[] result = brain.outputVals;
+        float x = result[0];
+        float y = result[1];
+        float eat = result[2];
+        float repro = result[3];
+                
+        float max = 0;
+        int index = -1;
+        for (int i = 0; i < result.length; i++) {
+            if (abs(result[i]) > max) {
+                max = abs(result[i]);
+                index = i;
+            }
         }
+        
+        switch (index) {
+           case 0:
+           case 1:
+               tryMove(x,y);
+               break;
+          case 2:
+              tryEat();
+              break;
+          case 3:
+              tryReproduce();
+              break;
+          default:
+              break;
+        }
+    }
+    
+    float roundAway(float val) {
+        if (val < 0) {
+            return floor(val); 
+        } else {
+            return ceil(val);
+        }
+    }
+    
+    float sig(float input) {
+        float denom = 1 + exp(-input);
+        return 1.0 / denom;
+    }
+    
+    float negsig(float input) {
+       float val = sig(input); 
+       val *= 2;
+       return val-1;
     }
     
     void tryReproduce() {
       
-        if (life < minimal_life) {
+        if (life < starting_life) {
             return;
         }
-        float cost = minimal_life + (life * 0.35);
+        float cost = life * 0.45;
         float pass = cost * 0.95;
-        if (life < cost) {
+        if (pass < (starting_life * 0.5)) {
             return;
         }
       
         Tile openSpot = findReproductionTile();
         if (openSpot == null) return;
                 
-        Creature newCreature = new Creature(world);
-        newCreature.brain.copyBrain(brain);
-        newCreature.brain.mutate();
-        newCreature.tile = openSpot;
-        newCreature.tile.creature = newCreature;
-        newCreature.col = col;
-        world.buildCreature(newCreature);
+        Creature newCreature = new Creature(world, species);
+          newCreature.brain.copyBrain(brain);
+          newCreature.brain.mutate();
+          newCreature.tile = openSpot;
+          newCreature.tile.creature = newCreature;
+          
+          float amount = 2;
+          float dred   = random(amount) - (amount/2);
+          float dgreen = random(amount) - (amount/2);
+          float dblue  = random(amount) - (amount/2);
+          newCreature.red   = norm(red+dred, 0, 255);
+          newCreature.green = norm(green+dgreen, 0, 255);
+          newCreature.blue  = norm(blue+dblue, 0, 255);
+          
+        species.creatures.add(newCreature);
         
         newCreature.life = pass;
         life -= cost;
         if (life < 0) {
-            world.killCreature(this);
+            killCreature();
+            return;
         }
     }
     
@@ -147,7 +178,7 @@ class Creature {
        HashMap<Integer, Food> foods = getNearbyFoods();
         
         if (foods.size() != 0) {
-            float gather = 1;
+            float gather = starting_life * 0.25;
             float per = gather / foods.size();
             for (Map.Entry me : foods.entrySet()) {
                 Food food = (Food)me.getValue();
@@ -157,25 +188,66 @@ class Creature {
         } 
     }
     
-    void tryMove(int index) {
-        if (index < 0) return;
-        if (tile.neighbors.containsKey(index)) {
-            Tile newTile = tile.neighbors.get(index);
-            if (newTile.creature != null || newTile instanceof Food) {
-                return;
+    void tryMove(float x, float y) {
+      
+        int xi = (int)roundAway(x);
+        int yi = (int)roundAway(y);
+        int direction = -1;
+        if (xi < 0) {
+           if (yi < 0) {
+               direction = Direction.SOUTHWEST.val();
+           } else if (yi == 0) {
+               direction = Direction.WEST.val();
+           } else if (yi > 0) {
+               direction = Direction.NORTHWEST.val();
+           }
+        } else if (xi == 0) {
+           if (yi < 0) {
+               direction = Direction.SOUTH.val();
+           } else if (yi == 0) {
+               return;
+           } else if (yi > 0) {
+               direction = Direction.NORTH.val();
+           }
+        } else if (xi > 0) {
+           if (yi < 0) {
+               direction = Direction.SOUTHEAST.val();
+           } else if (yi == 0) {
+               direction = Direction.EAST.val();
+           } else if (yi > 0) {
+               direction = Direction.NORTHEAST.val();
+           }
+        }
+        if (direction < 0) return;
+        
+        if (tile.neighbors.containsKey(direction)) {
+            Tile target = tile.neighbors.get(direction);
+            if (!(target instanceof Food)) {
+               if (target.creature == null) {
+                   tile.creature = null;
+                   tile = target;
+                   tile.creature = this;  
+               } else {
+                   if (target.creature.markedForDeath) return;
+                   if (target.creature.life <= 0) return;
+                   
+                   float steal = life * 0.15;
+                   if (steal > target.creature.life) steal = target.creature.life;
+                   
+                   target.creature.life -= steal;
+                   steal *= 0.8;
+                   life += steal;
+               }               
             }
-            tile.creature = null;
-            tile = newTile;
-            tile.creature = this;
         }
     }
     
     void draw() {
       
-      if (tile == null) {
-          println("Invalid tile for this creature");
-          return;
-      }
+        if (tile == null) {
+            println("Invalid tile for this creature");
+            return;
+        }
         
         int x = tile.x;
         int y = tile.y;
@@ -188,13 +260,9 @@ class Creature {
         y -= w/2;     
         
         w -= 6;
-        
-        fill(col);        
+        fill(color(red, green, blue));        
         rect(x,y,w,w);
     }
-    
-    
-    
     
     HashMap<Integer, Tile> getValidNeighbors() {
         HashMap<Integer, Tile> result = new HashMap<Integer, Tile>();
@@ -245,9 +313,7 @@ class Creature {
         } while (true);
     }
     
-    void print() {
-      
-        println(tile.print());
-        
+    void print() {      
+        println(tile.print());        
     }
 }

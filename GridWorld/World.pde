@@ -6,12 +6,12 @@
         ArrayList<Tile> tiles = new ArrayList<Tile>();
         int numTiles;
         int tileWidth;
-        int numCreatures = 50;
+        int numSpecies = 5;
+        int numCreaturesPerSpecies = 10;
         int numFood = 200;
         PFont font;
         
-        ArrayList<Creature> creatures = new ArrayList<Creature>();
-        ArrayList<Creature> preGrave = new ArrayList<Creature>();
+        ArrayList<Species> species = new ArrayList<Species>();
         ArrayList<Food> foods = new ArrayList<Food>();
         
         ArrayList<Integer> creatureSpawns = new ArrayList<Integer>();
@@ -59,17 +59,10 @@
             for (int i = 0; i < tiles.size(); i++) {
                 addNeighbors(tiles.get(i), i);
             }
-            
-            for (int i = 0; i < numCreatures; i++) {
-                Tile tile = findCreatureSpawn();
-                if (tile == null) continue;
-                      
-                Creature creature = new Creature(this);
-                creature.tile = tile;
-                creature.col = color(random(255), random(255), random(255));
-                tile.creature = creature;
-                
-                creatures.add(creature);                        
+        
+            for (int i = 0; i < numSpecies; i++) {
+               Species species = new Species(this, numCreaturesPerSpecies, creatureSpawns);
+               this.species.add(species);
             }
         }
         
@@ -128,95 +121,24 @@
                 tiles.get(i).update();
                 tiles.get(i).draw();
             }
-            for (int i = 0; i < creatures.size(); i++) {
-                creatures.get(i).update();
+            for (int i = 0; i < species.size(); i++) {
+               species.get(i).update(); 
             }
-            while (preGrave.size() > 0) {
-                Creature target = preGrave.get(0);
-                tiles.get(target.tile.worldIndex).creature = null;
-                
-                boolean deleted = false;
-                for (int j = 0; j < creatures.size(); j++) {
-                    if (creatures.get(j) == target) {
-                        creatures.remove(j);
-                        deleted = true;
-                        break;
-                    }
-                }
-                if (!deleted) {
-                    println("Couldn't kill creature.");
-                }
-                preGrave.remove(0);
-            }
-            preGrave.clear();
-                
-            if (creatures.size() < numCreatures) {
-                for (int i = 0; i < numCreatures - creatures.size(); i++) {
-                    spawnCreature();
-                }
-            }
-            for (int i = 0; i < creatures.size(); i++) {
-                creatures.get(i).draw();
+            for (int i = 0; i < species.size(); i++) {
+               species.get(i).draw(); 
             }
             fill(255);
             textFont(font, 32);
             scale(1,-1);
-            text("Population : " + creatures.size(), 1500, -500);
-            text("Frame rate : " + frameRate, 1500, -400);
-        }
-        
-        void killCreature(Creature target) {
-            target.markedForDeath = true;
-            preGrave.add(target);
-        }
-        
-        Creature buildCreature(Creature newCreature) {
-            if (newCreature.tile == null) println("Invalid tile on spawn");
-            else {
-                creatures.add(newCreature);
-            }
-            return newCreature;
-        }
-        
-        Creature spawnCreature() {
-            Tile tile = findCreatureSpawn();
-            if (tile == null) {
-                println("Couldn't find spawn");
-                return null;
-            }
-            Creature creature = new Creature(this);
-            creature.tile = tile;
-            creature.col = color(random(255), random(255), random(255));
-            tile.creature = creature;
             
-            creatures.add(creature);
-            return creature;
-        }
-        
-        Tile findCreatureSpawn() {
-            Set<Integer> points = new HashSet<Integer>();
-            do {
-              
-                if (points.size() == creatureSpawns.size()) {
-                    println("No creature spawn location open.");
-                    return null;
-                }
-              
-                int choice = (int) random(creatureSpawns.size());
-                int index = creatureSpawns.get(choice);
-                if (points.contains(index)) continue;
-                
-                points.add(index);
-                
-                Tile tile = tiles.get(index);
-                boolean noCreature = (tile.creature == null);
-                boolean notFood = !(tile instanceof Food);
-                
-                if (noCreature && notFood) {
-                    return tile;
-                }
-            } while (true);
-        }
+            int xx = 1500;
+            int yy = -500;
+            for (int i = 0; i < species.size(); i++) {
+                text("Population : " + species.get(i).creatures.size(), xx, yy);
+                yy += 50;
+            }
+            text("Frame rate : " + frameRate, xx, yy);
+        }        
         
         Tile findFoodSpawn() {
             Set<Integer> points = new HashSet<Integer>();

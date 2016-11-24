@@ -1,6 +1,6 @@
 class Food extends Tile {
     float amount;
-    float growth = 0.0045;
+    float growth = 0.01;
     public Food(int xx, int yy, int ww, color cc, int index) {
         super(xx, yy, ww, cc, index);
         c = color(0,255,0);

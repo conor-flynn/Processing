@@ -26,12 +26,12 @@
         }
         
         void draw() {
-            fill(c);
-            rect(x-w/2,y-w/2,w,w);
-            
             if (creature != null && creature.tile != this) {
                 println("Tile has a creature, but creature doesn't have tile");
+                return;
             }
+            fill(c);
+            rect(x-w/2,y-w/2,w,w);
         } 
         
         String print() {
