@@ -3,7 +3,7 @@
 // --------------------------------------
         
     void settings() {
-        float reduction = 0.65;
+        float reduction = 0.85;
         width  = (int)(displayWidth  * reduction);
         height = (int)(displayHeight * reduction);
         size(width, height);

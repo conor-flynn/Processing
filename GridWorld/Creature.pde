@@ -136,6 +136,33 @@ class Creature {
        return val-1;
     }
     
+    void buildColor() {
+       red = random(255);
+       green = random(255);
+       blue = random(255);
+    }
+    
+    float clamp(float val, float lower, float upper) {
+       if (val < lower) return lower;
+       if (val > upper) return upper;
+       return val;
+    }
+    
+    void mutateColor(Creature target) {
+        float delta = 5;
+        float d1 = random(delta) - (delta/2);
+        float d2 = random(delta) - (delta/2);
+        float d3 = random(delta) - (delta/2);
+        
+        red = target.red + d1;
+        green = target.green + d2;
+        blue = target.blue + d3;
+        
+        red = clamp(red, 0, 255);
+        green = clamp(green, 0, 255);
+        blue = clamp(blue, 0, 255);
+    }
+    
     void tryReproduce() {
       
         if (life < starting_life) {
@@ -155,15 +182,7 @@ class Creature {
           newCreature.brain.mutate();
           newCreature.tile = openSpot;
           newCreature.tile.creature = newCreature;
-          
-          float amount = 2;
-          float dred   = random(amount) - (amount/2);
-          float dgreen = random(amount) - (amount/2);
-          float dblue  = random(amount) - (amount/2);
-          newCreature.red   = norm(red+dred, 0, 255);
-          newCreature.green = norm(green+dgreen, 0, 255);
-          newCreature.blue  = norm(blue+dblue, 0, 255);
-          
+          newCreature.mutateColor(this);          
         species.creatures.add(newCreature);
         
         newCreature.life = pass;
