@@ -13,7 +13,8 @@
         
         
         PFont font;
-        int targetFrameRate = 60;
+        int targetFrameRate = 200;
+        int generation = 0;
         
         ArrayList<Species> species = new ArrayList<Species>();
         ArrayList<Food> foods = new ArrayList<Food>();
@@ -162,6 +163,8 @@
             text("Frame rate : " + frameRate, xx, yy);
             yy += 50;
             text("Targe rate : " + targetFrameRate, xx, yy);
+            yy += 50;
+            text("Generation : " + generation++, xx, yy);
         }        
         
         Tile findFoodSpawn() {

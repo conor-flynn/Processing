@@ -5,9 +5,9 @@ class Brain {
     ArrayList<float[]> hiddenPlus;
     float[] outputVals;
     
-    int numInputs = 21;
+    int numInputs = 22;
     int numHidden = 16;
-    int numOutputs = 4;
+    int numOutputs = 5;
       // 0: north
       // 1: south
       // 2: east
@@ -54,7 +54,7 @@ class Brain {
     }
     
     void mutate() {
-        if (random(1) > 0.5) mutate();
+        if (random(1) > 0.2) mutate();
         if (random(1) > 0.5) {
             //inputPlus
             int choice1 = (int)random(inputPlus.size());

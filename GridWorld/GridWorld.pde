@@ -12,6 +12,9 @@
     void setup() {
         noStroke();
         smooth();
+        
+        surface.setResizable(true);
+        
         // ----
         world = new World();
         camera = new Camera(world);

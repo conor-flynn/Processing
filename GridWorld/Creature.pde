@@ -96,7 +96,8 @@ class Creature {
         inputs.add((random(1) > 0.95) ? 1.0 : 0.0);
         inputs.add((random(1) > 0.05) ? 0.0 : 1.0);
         inputs.add(random(1));
-        inputs.add(1.0);        
+        inputs.add(1.0);
+        inputs.add(brain.outputVals[4]);
         
         brain.process(inputs);
         float[] result = brain.outputVals;
@@ -107,7 +108,7 @@ class Creature {
                 
         float max = 0;
         int index = -1;
-        for (int i = 0; i < result.length; i++) {
+        for (int i = 0; i < result.length-1; i++) {
             if (abs(result[i]) > max) {
                 max = abs(result[i]);
                 index = i;
@@ -211,7 +212,7 @@ class Creature {
        HashMap<Integer, Food> foods = getNearbyFoods();
         
         if (foods.size() != 0) {
-            float gather = 0.2;
+            float gather = 0.4;
             float per = gather / foods.size();
             for (Map.Entry me : foods.entrySet()) {
                 Food food = (Food)me.getValue();
