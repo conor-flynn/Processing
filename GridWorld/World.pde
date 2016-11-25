@@ -7,7 +7,7 @@
         int numTiles;
         int tileWidth;
         
-        int numSpecies = 5;
+        int numSpecies = 10;
         int numCreaturesPerSpecies = 10;
         int numFood = 200;
         
@@ -138,7 +138,7 @@
             scale(1,-1);
             
             int xx = 1500;
-            int yy = -900;
+            int yy = -1500;
             for (int i = 0; i < species.size(); i++) {
                 Species target = species.get(i);
                 int max_gen = -1;
@@ -195,9 +195,11 @@
         void keyPressed() {
             if (key == 'q') {
                targetFrameRate *= 1.1;
+               if (targetFrameRate < 10) targetFrameRate++;
                frameRate(targetFrameRate);
             } else if (key == 'w') {
                targetFrameRate *= 0.9;
+               if (targetFrameRate < 1) targetFrameRate = 1;
                frameRate(targetFrameRate);
             }
         }
