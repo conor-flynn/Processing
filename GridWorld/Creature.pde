@@ -199,7 +199,7 @@ class Creature {
        HashMap<Integer, Food> foods = getNearbyFoods();
         
         if (foods.size() != 0) {
-            float gather = starting_life * 0.25;
+            float gather = 0.05;
             float per = gather / foods.size();
             for (Map.Entry me : foods.entrySet()) {
                 Food food = (Food)me.getValue();
