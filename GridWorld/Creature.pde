@@ -38,7 +38,9 @@ class Creature {
     void update() {
         if (markedForDeath) return;
         age++;
-        life -= 0.01;
+        float decay = life * 0.01;
+        if (decay < 0.01) decay = 0.01;
+        life -= decay;
         if (tile == null) {
             println("Creature with no tile");
             return;
