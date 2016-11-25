@@ -6,10 +6,14 @@
         ArrayList<Tile> tiles = new ArrayList<Tile>();
         int numTiles;
         int tileWidth;
+        
         int numSpecies = 5;
         int numCreaturesPerSpecies = 10;
         int numFood = 200;
+        
+        
         PFont font;
+        int targetFrameRate = 60;
         
         ArrayList<Species> species = new ArrayList<Species>();
         ArrayList<Food> foods = new ArrayList<Food>();
@@ -21,6 +25,7 @@
             font = createFont("Arial", 160, true);
             tileWidth = 30;
             numTiles = 50;
+            frameRate(targetFrameRate);
             for (int y = 0; y < numTiles; y++) {
                 for (int x = 0; x < numTiles; x++) {
                     int xx = x * tileWidth;
@@ -132,12 +137,31 @@
             scale(1,-1);
             
             int xx = 1500;
-            int yy = -500;
+            int yy = -900;
             for (int i = 0; i < species.size(); i++) {
-                text("Population : " + species.get(i).creatures.size(), xx, yy);
+                Species target = species.get(i);
+                int max_gen = -1;
+                int total_gen = 0;
+                for (int j = 0; j < target.creatures.size(); j++) {
+                    if (target.creatures.get(j).generation > max_gen) {
+                       max_gen = target.creatures.get(j).generation; 
+                    }
+                    total_gen += target.creatures.get(j).generation;
+                }
+                total_gen /= target.creatures.size();
+                String popSize = "(" + species.get(i).creatures.size() + ")";
+                String genCount = "(" + max_gen + ")";
+                String avrCount = "(" + total_gen + ")";
+                text("Population : " + popSize, xx, yy);
+                yy += 50;
+                text("Max generation number : " + genCount, xx+50, yy);
+                yy += 50;
+                text("Average generation number : " + avrCount, xx+50, yy);
                 yy += 50;
             }
             text("Frame rate : " + frameRate, xx, yy);
+            yy += 50;
+            text("Targe rate : " + targetFrameRate, xx, yy);
         }        
         
         Tile findFoodSpawn() {
@@ -163,6 +187,16 @@
                     return tile;
                 }
             } while (true);
+        }
+        
+        void keyPressed() {
+            if (key == 'q') {
+               targetFrameRate *= 1.1;
+               frameRate(targetFrameRate);
+            } else if (key == 'w') {
+               targetFrameRate *= 0.9;
+               frameRate(targetFrameRate);
+            }
         }
     }
     

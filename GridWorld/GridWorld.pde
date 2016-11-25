@@ -3,7 +3,7 @@
 // --------------------------------------
         
     void settings() {
-        float reduction = 0.85;
+        float reduction = 0.45;
         width  = (int)(displayWidth  * reduction);
         height = (int)(displayHeight * reduction);
         size(width, height);
@@ -12,7 +12,6 @@
     void setup() {
         noStroke();
         smooth();
-        frameRate(6000);
         // ----
         world = new World();
         camera = new Camera(world);
@@ -45,7 +44,6 @@
     }
     
     void keyPressed() {
-        if (key == 'r') {
-            camera.resetPosition();
-        }
+        world.keyPressed();
+        camera.keyPressed();
     }

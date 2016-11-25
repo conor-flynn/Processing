@@ -34,9 +34,9 @@
             
             
             // ----
-            location.x = 388;
-            location.y = 13.33;
-            zoomLevel = 0.46;
+            location.x = 228;
+            location.y = 14.65;
+            zoomLevel = 0.3113;
         }
         
         void draw() {
@@ -71,5 +71,14 @@
             
             location.x += mouseX;
             location.y += (height - mouseY);
+        }
+        
+        void keyPressed() {
+            if (key == 'r') {
+               resetPosition(); 
+            } else if (key == 'k') {
+               println("Location offset : (" + location.x + "," + location.y + ")");
+               println("Zoom : (" + zoomLevel + ")");
+            }
         }
     }

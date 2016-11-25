@@ -10,6 +10,7 @@ class Creature {
     
     float life;
     int age;
+    int generation;
     boolean markedForDeath;
     
     float starting_life;
@@ -20,13 +21,17 @@ class Creature {
         this.world = world;
         this.species = species;
       
-        starting_life = 1;
-        minimal_life = starting_life * 0.8;
-        brain = new Brain();
-        life = starting_life;
-        age = 0;
         markedForDeath = false;
         red = green = blue = -1;
+        
+        starting_life = 1;
+        minimal_life = starting_life * 0.8;
+        
+        brain = new Brain();        
+        life = starting_life;
+        age = 0;
+        generation = 0;
+        
     }
     
     void killCreature() {
@@ -36,20 +41,26 @@ class Creature {
     }
     
     void update() {
-        if (markedForDeath) return;
-        age++;
-        float decay = life * 0.01;
-        if (decay < 0.01) decay = 0.01;
-        life -= decay;
         if (tile == null) {
             println("Creature with no tile");
             return;
         }
+        if (markedForDeath) return;
+        
+        age++;
+        
+        float speciesLimiter = species.creatures.size() / 3000.0;
+        float decayRate = 0.0025 + speciesLimiter;
+        
+        // Looking for a decayRate=0.01 for species with a count of 10-ish
+        float decayAmount = life * decayRate;
+        if (decayAmount < decayRate) decayAmount = decayRate;
+        life -= decayAmount;        
         
         if (life <= 0) {
             killCreature();
             return;
-        } else if (age > 2000) {
+        } else if (age > 1000) {
             killCreature();
             return;
         }
@@ -184,7 +195,8 @@ class Creature {
           newCreature.brain.mutate();
           newCreature.tile = openSpot;
           newCreature.tile.creature = newCreature;
-          newCreature.mutateColor(this);          
+          newCreature.mutateColor(this);     
+          newCreature.generation = generation+1;
         species.creatures.add(newCreature);
         
         newCreature.life = pass;
