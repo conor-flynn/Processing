@@ -49,7 +49,7 @@ class Creature {
         if (life <= 0) {
             killCreature();
             return;
-        } else if (age > 6000) {
+        } else if (age > 2000) {
             killCreature();
             return;
         }
@@ -199,7 +199,7 @@ class Creature {
        HashMap<Integer, Food> foods = getNearbyFoods();
         
         if (foods.size() != 0) {
-            float gather = 0.05;
+            float gather = 0.2;
             float per = gather / foods.size();
             for (Map.Entry me : foods.entrySet()) {
                 Food food = (Food)me.getValue();
@@ -252,7 +252,7 @@ class Creature {
                    if (target.creature.markedForDeath) return;
                    if (target.creature.life <= 0) return;
                    
-                   float steal = life * 0.15;
+                   float steal = life * 0.40;
                    if (steal > target.creature.life) steal = target.creature.life;
                    
                    target.creature.life -= steal;

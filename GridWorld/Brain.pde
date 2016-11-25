@@ -54,6 +54,7 @@ class Brain {
     }
     
     void mutate() {
+        if (random(1) > 0.9) mutate();
         if (random(1) > 0.5) {
             //inputPlus
             int choice1 = (int)random(inputPlus.size());
