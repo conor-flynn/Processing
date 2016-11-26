@@ -2,11 +2,11 @@
     import java.util.Map;   
     import java.util.*;
     class World {  
+        GUI gui;
       
         ArrayList<Tile> tiles = new ArrayList<Tile>();
         
         
-        PFont font;
         int generation = 0;
         
         ArrayList<Species> species = new ArrayList<Species>();
@@ -18,14 +18,18 @@
         
         
         public World() {
-            font = createFont("Arial", 160, true);
+            gui = new GUI(this);
             frameRate(Settings.TARGET_FRAME_RATE);
+            
+            PVector offset = new PVector(Settings.TILE_WIDTH/2, Settings.TILE_WIDTH/2);
             
             for (int y = 0; y < Settings.NUM_TILES; y++) {
                 for (int x = 0; x < Settings.NUM_TILES; x++) {
                   
                     int xx = x * Settings.TILE_WIDTH;
                     int yy = y * Settings.TILE_WIDTH;
+                    xx += offset.x;
+                    yy += offset.y;
                     color cc = color(255);
                     int index = x + (y*Settings.NUM_TILES);
                     tiles.add(new Tile(xx, yy, Settings.TILE_WIDTH-2, cc, index));
@@ -121,6 +125,9 @@
             return true;
         }
         
+        void preDraw() {
+            gui.preDraw(); 
+        }
         void draw() {
             for (int i = 0; i < tiles.size(); i++) {
                 tiles.get(i).update();
@@ -132,39 +139,10 @@
             for (int i = 0; i < species.size(); i++) {
                species.get(i).draw(); 
             }
-            fill(255);
-            textFont(font, 32);
-            scale(1,-1);
-            
-            int xx = 1500;
-            int yy = -1500;
-            for (int i = 0; i < species.size(); i++) {
-                Species target = species.get(i);
-                int max_gen = -1;
-                int total_gen = 0;
-                for (int j = 0; j < target.creatures.size(); j++) {
-                    if (target.creatures.get(j).generation > max_gen) {
-                       max_gen = target.creatures.get(j).generation; 
-                    }
-                    total_gen += target.creatures.get(j).generation;
-                }
-                total_gen /= target.creatures.size();
-                String popSize = "(" + species.get(i).creatures.size() + ")";
-                String genCount = "(" + max_gen + ")";
-                String avrCount = "(" + total_gen + ")";
-                text("Population : " + popSize, xx, yy);
-                yy += 50;
-                text("Max generation number : " + genCount, xx+50, yy);
-                yy += 50;
-                text("Average generation number : " + avrCount, xx+50, yy);
-                yy += 50;
-            }
-            text("Frame rate : " + frameRate, xx, yy);
-            yy += 50;
-            text("Targe rate : " + Settings.TARGET_FRAME_RATE, xx, yy);
-            yy += 50;
-            text("Generation : " + generation++, xx, yy);
-        }        
+        }
+        void postDraw() {
+            gui.postDraw(); 
+        }
         
         Tile findFoodSpawn() {
             Set<Integer> points = new HashSet<Integer>();
@@ -191,16 +169,29 @@
             } while (true);
         }
         
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        void mouseWheel(MouseEvent event) {
+            gui.mouseWheel(event); 
+        }
+        void mouseReleased() {
+            gui.mouseReleased(); 
+        }
+        void mouseDragged(MouseEvent event) {
+            gui.mouseDragged(event); 
+        }
         void keyPressed() {
-            if (key == 'q') {
-               Settings.TARGET_FRAME_RATE *= 1.1;
-               if (Settings.TARGET_FRAME_RATE < 10) Settings.TARGET_FRAME_RATE++;
-               frameRate(Settings.TARGET_FRAME_RATE);
-            } else if (key == 'w') {
-               Settings.TARGET_FRAME_RATE *= 0.9;
-               if (Settings.TARGET_FRAME_RATE < 1) Settings.TARGET_FRAME_RATE = 1;
-               frameRate(Settings.TARGET_FRAME_RATE);
-            }
+            gui.keyPressed();
+        }
+        void mousePressed() {
+            gui.mousePressed();
         }
     }
     

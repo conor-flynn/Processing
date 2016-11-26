@@ -1,7 +1,7 @@
     static class Settings {
       
          // Game settings
-             static int TARGET_FRAME_RATE = 5;
+             static int TARGET_FRAME_RATE = 60;
       
          // World settings
              static final int NUM_TILES = 50;
@@ -15,8 +15,8 @@
          
          // Evolution settings
              static final int NUM_FOOD = 200;
-             static final int NUM_SPECIES = 1;
-             static final int NUM_CREATURES_PER_SPECIES = 1;
+             static final int NUM_SPECIES = 5;
+             static final int NUM_CREATURES_PER_SPECIES = 10;
              
              static final float FOOD_GROWTH_RATE = 0.01;
              static final float FOOD_SPAWN_AMOUNT = 1.0;

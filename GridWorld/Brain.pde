@@ -37,16 +37,17 @@ class Brain {
     }
     
     void copyBrain(Brain other) {
-        for (int layer = 0; layer < neurons.size(); layer++) {
+      
+        for (int layer = 0; layer < other.neurons.size(); layer++) {
           
-            int numNeurons = neurons.get(layer).size();
+            int numNeurons = other.neurons.get(layer).size();
             ArrayList<Float> neuronLayer = new ArrayList<Float>(numNeurons);
             while (neuronLayer.size() < numNeurons) neuronLayer.add(0.0);
             
             neurons.add(neuronLayer);
             
-            if (layer+1 < neurons.size()) {
-                int nextNumNeurons = neurons.get(layer+1).size();
+            if (layer+1 < other.neurons.size()) {
+                int nextNumNeurons = other.neurons.get(layer+1).size();
                 ArrayList<ArrayList<Float>> axons2 = new ArrayList<ArrayList<Float>>();
                 for (int neuron = 0; neuron < numNeurons; neuron++) {
                     ArrayList<Float> axons3 = new ArrayList<Float>();
@@ -81,15 +82,14 @@ class Brain {
     }
     
     void process(ArrayList<Float> inputs) {
-      
         for (int i = 0; i < inputs.size(); i++) {
             neurons.get(0).set(i, inputs.get(i)); 
         }
-        for (int layer = 0; layer < neurons.size(); layer++) {
+        for (int layer = 1; layer < neurons.size(); layer++) {
             for (int neuron = 0; neuron < neurons.get(layer).size(); neuron++) {
                 neurons.get(layer).set(neuron, 0.0); 
             }
-        }        
+        }
         
         // Inputs need to already be negsig'd        
         for (int layer = 0; layer < neurons.size()-1; layer++) {

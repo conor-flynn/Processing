@@ -108,14 +108,15 @@ class Creature {
         inputs.add(1.0);
         int _outLayer = brain.neurons.size()-1;
         int _memoryNeuron = brain.neurons.get(_outLayer).size()-1;
-        inputs.add(negsig(brain.neurons.get(_outLayer).get(_memoryNeuron)));
+        inputs.add((brain.neurons.get(_outLayer).get(_memoryNeuron)));
+        
         
         brain.process(inputs);
         ArrayList<Float> results = brain.neurons.get(brain.neurons.size()-1);
         float x = results.get(0);
         float y = results.get(1);
         
-        float limit = 0.01;
+        float limit = 0.0001;
         if (abs(x) > limit || abs(y) > limit) {
             tryMove(x,y);
             return;

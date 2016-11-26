@@ -1,6 +1,5 @@
     Camera camera;    
     World world;
-    GUI gui;
 // --------------------------------------
         
     void settings() {
@@ -13,13 +12,10 @@
     void setup() {
         noStroke();
         smooth();
-        
+        // ----
         surface.setResizable(true);
-        
         // ----
         world = new World();
-        camera = new Camera();
-        gui = new GUI();
     }
      
     void draw () {
@@ -28,31 +24,27 @@
         scale(1,-1);
         translate(0, -height);
         // ----
-        camera.draw();
+        world.preDraw();
         world.draw();
-        gui.draw();
+        world.postDraw();
     }
 
     void mousePressed() {
-        camera.mousePressed();
-        gui.mousePressed();
+        world.mousePressed();
     }
     
     void mouseDragged(MouseEvent event) {
-        camera.mouseDragged(event);
+        world.mouseDragged(event);
     }
     
     void mouseReleased() {
-        camera.mouseReleased();     
+        world.mouseReleased();
     }
     
     void mouseWheel(MouseEvent event) {
-        camera.mouseWheel(event);
+        world.mouseWheel(event);
     }
     
     void keyPressed() {
         world.keyPressed();
-        camera.keyPressed();
-        // ---
-        gui.keyPressed();
     }
