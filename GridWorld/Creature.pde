@@ -1,6 +1,4 @@
 class Creature {
-  
-    World world;
     Species species;
   
     Brain brain;
@@ -17,8 +15,7 @@ class Creature {
     float minimal_life;
     
     
-    public Creature(World world, Species species) {
-        this.world = world;
+    public Creature(Species species) {
         this.species = species;
       
         markedForDeath = false;
@@ -26,8 +23,8 @@ class Creature {
         
         starting_life = 1;
         minimal_life = starting_life * 0.8;
-        
-        brain = new Brain();        
+          
+        brain = new Brain(null);
         life = starting_life;
         age = 0;
         generation = 0;
@@ -43,6 +40,18 @@ class Creature {
     void update() {
         if (tile == null) {
             println("Creature with no tile");
+            return;
+        }
+        if (brain == null) {
+            println("Creature with no brain.");
+            return;
+        }
+        if (brain.neurons.size() == 0) {
+            println("Creature with empty neurons.");
+            return;
+        }
+        if (brain.axons.size() == 0) {
+            println("Creature with empty axons.");
             return;
         }
         if (markedForDeath) return;
@@ -97,37 +106,22 @@ class Creature {
         inputs.add((random(1) > 0.05) ? 0.0 : 1.0);
         inputs.add(random(1));
         inputs.add(1.0);
-        inputs.add(brain.outputVals[4]);
+        int _outLayer = brain.neurons.size()-1;
+        int _memoryNeuron = brain.neurons.get(_outLayer).size()-1;
+        inputs.add(negsig(brain.neurons.get(_outLayer).get(_memoryNeuron)));
         
         brain.process(inputs);
-        float[] result = brain.outputVals;
-        float x = result[0];
-        float y = result[1];
-        float eat = result[2];
-        float repro = result[3];
-                
-        float max = 0;
-        int index = -1;
-        for (int i = 0; i < result.length-1; i++) {
-            if (abs(result[i]) > max) {
-                max = abs(result[i]);
-                index = i;
-            }
-        }
+        ArrayList<Float> results = brain.neurons.get(brain.neurons.size()-1);
+        float x = results.get(0);
+        float y = results.get(1);
         
-        switch (index) {
-           case 0:
-           case 1:
-               tryMove(x,y);
-               break;
-          case 2:
-              tryEat();
-              break;
-          case 3:
-              tryReproduce();
-              break;
-          default:
-              break;
+        float limit = 0.01;
+        if (abs(x) > limit || abs(y) > limit) {
+            tryMove(x,y);
+            return;
+        } else {
+            tryReproduce();
+            return;
         }
     }
     
@@ -191,7 +185,7 @@ class Creature {
         Tile openSpot = findReproductionTile();
         if (openSpot == null) return;
                 
-        Creature newCreature = new Creature(world, species);
+        Creature newCreature = new Creature(species);
           newCreature.brain.copyBrain(brain);
           newCreature.brain.mutate();
           newCreature.tile = openSpot;
@@ -272,6 +266,10 @@ class Creature {
                    steal *= 0.8;
                    life += steal;
                }               
+            } else {
+                Food food = (Food)target;
+                life += food.amount;
+                food.amount -= food.amount;
             }
         }
     }

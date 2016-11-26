@@ -1,71 +1,72 @@
 class Brain {
   
-    ArrayList<float[]> inputPlus;
-    float[] hiddenVals;
-    ArrayList<float[]> hiddenPlus;
-    float[] outputVals;
-    
-    int numInputs = 22;
-    int numHidden = 16;
-    int numOutputs = 5;
-      // 0: north
-      // 1: south
-      // 2: east
-      // 3: west
-      // 4: consume food
-      // 5: reproduce
-   
-    public Brain() {
+    ArrayList<ArrayList<Float>> neurons = new ArrayList<ArrayList<Float>>();
+    ArrayList<ArrayList<ArrayList<Float>>> axons = new ArrayList<ArrayList<ArrayList<Float>>>();
+       
+    public Brain(ArrayList<Integer> dimensions) { 
+      
+        if (dimensions == null) return;
         
-        inputPlus = new ArrayList<float[]>();
-        hiddenVals = new float[numHidden];        
-        hiddenPlus = new ArrayList<float[]>();
-        outputVals = new float[numOutputs];
+        for (int layer = 0; layer < dimensions.size(); layer++) {
+          
+            int numNeurons = dimensions.get(layer);
+            
+            ArrayList<Float> neuronLayer = new ArrayList<Float>(numNeurons);
+            while (neuronLayer.size() < numNeurons) neuronLayer.add(0.0);
+            neurons.add(neuronLayer);
+            
+            if (layer+1 < dimensions.size()) {
+              
+                ArrayList<ArrayList<Float>> axons2 = new ArrayList<ArrayList<Float>>();
+                
+                int nextNumNeurons = dimensions.get(layer+1);
+                
+                for (int neuron = 0; neuron < numNeurons; neuron++) {
+                  
+                    ArrayList<Float> axons3 = new ArrayList<Float>();                    
+                    for (int gene = 0; gene < nextNumNeurons; gene++) {
+                        axons3.add(random(0.1)-0.05);
+                    }
+                    axons2.add(axons3);
+                    
+                }
+                axons.add(axons2);
+            }
+        }
         
-        for (int i = 0; i < numInputs; i++) {
-            float[] data = new float[numHidden];
-            for (int j = 0; j < numHidden; j++) {
-                data[j] = (random(0.1)-0.05);
-            }
-            inputPlus.add(data);
-        }
-        for (int i = 0; i < numHidden; i++) {
-            float[] data = new float[numOutputs];
-            for (int j = 0; j < numOutputs; j++) {
-                data[j] = (random(0.1)-0.05);
-            }
-            hiddenPlus.add(data);
-        }
     }
     
     void copyBrain(Brain other) {
-        for (int i = 0; i < inputPlus.size(); i++) {
-            float[] target = other.inputPlus.get(i);
-            for (int j = 0; j < target.length; j++) {
-                inputPlus.get(i)[j] = target[j];
-            }
-        }
-        for (int i = 0; i < hiddenPlus.size(); i++) {
-            float[] target = other.hiddenPlus.get(i);
-            for (int j = 0; j < target.length; j++) {
-                hiddenPlus.get(i)[j] = target[j];
-            }
+        for (int layer = 0; layer < neurons.size(); layer++) {
+          
+            int numNeurons = neurons.get(layer).size();
+            ArrayList<Float> neuronLayer = new ArrayList<Float>(numNeurons);
+            while (neuronLayer.size() < numNeurons) neuronLayer.add(0.0);
+            
+            neurons.add(neuronLayer);
+            
+            if (layer+1 < neurons.size()) {
+                int nextNumNeurons = neurons.get(layer+1).size();
+                ArrayList<ArrayList<Float>> axons2 = new ArrayList<ArrayList<Float>>();
+                for (int neuron = 0; neuron < numNeurons; neuron++) {
+                    ArrayList<Float> axons3 = new ArrayList<Float>();
+                    for (int gene = 0; gene < nextNumNeurons; gene++) {
+                        axons3.add(other.axons.get(layer).get(neuron).get(gene)); 
+                    }
+                    axons2.add(axons3);
+                }
+                axons.add(axons2);
+            }            
         }
     }
     
     void mutate() {
-        if (random(1) > 0.1) mutate();
-        if (random(1) > 0.5) {
-            //inputPlus
-            int choice1 = (int)random(inputPlus.size());
-            int choice2 = (int)random(inputPlus.get(choice1).length);
-            inputPlus.get(choice1)[choice2] += (random(0.1)-0.05);
-        } else {
-            //hiddenPlus
-            int choice1 = (int)random(hiddenPlus.size());
-            int choice2 = (int)random(hiddenPlus.get(choice1).length);
-            hiddenPlus.get(choice1)[choice2] += (random(0.1)-0.05);
-        }
+        int layer = (int)random(axons.size());
+        int neuron = (int)random(axons.get(layer).size());
+        int gene = (int)random(axons.get(layer).get(neuron).size());
+        float delta = random(0.1) - 0.05;
+        float current = axons.get(layer).get(neuron).get(gene);
+        axons.get(layer).get(neuron).set(gene, current+delta);
     }
     
     float sig(float input) {
@@ -79,34 +80,33 @@ class Brain {
        return val-1;
     }
     
-    void process(ArrayList<Float> inputs) {        
-        
-        for (int i = 0; i < numHidden; i++) {
-            hiddenVals[i] = 0;
-        }
-        for (int i = 0; i < numOutputs; i++) {
-            outputVals[i] = 0;
-        }
+    void process(ArrayList<Float> inputs) {
+      
         for (int i = 0; i < inputs.size(); i++) {
-            for (int j = 0; j < numHidden; j++) {
-                float val = inputs.get(i);
-                float[] links = inputPlus.get(i);
-                for (int k = 0; k < links.length; k++) {
-                    float result = links[k] * val;
-                    hiddenVals[k] += result;
+            neurons.get(0).set(i, inputs.get(i)); 
+        }
+        for (int layer = 0; layer < neurons.size(); layer++) {
+            for (int neuron = 0; neuron < neurons.get(layer).size(); neuron++) {
+                neurons.get(layer).set(neuron, 0.0); 
+            }
+        }        
+        
+        // Inputs need to already be negsig'd        
+        for (int layer = 0; layer < neurons.size()-1; layer++) {
+            for (int neuron = 0; neuron < neurons.get(layer).size(); neuron++) {
+                float currentValue = neurons.get(layer).get(neuron);
+                for (int gene = 0; gene < axons.get(layer).get(neuron).size(); gene++) {
+                    float geneWeight = axons.get(layer).get(neuron).get(gene);
+                    float targetNeuronValue = neurons.get(layer+1).get(gene);
+                    float targetNewValue = (currentValue * geneWeight) + targetNeuronValue;
+                    
+                    neurons.get(layer+1).set(gene, targetNewValue);                    
                 }
             }
-        }
-        for (int i = 0; i < hiddenVals.length; i++) {
-          
-            hiddenVals[i] = negsig(hiddenVals[i]);
-            float val = hiddenVals[i];            
-            for (int j = 0; j < numOutputs; j++) {
-                outputVals[j] += val * hiddenPlus.get(i)[j];
+            for (int neuron = 0; neuron < neurons.get(layer+1).size(); neuron++) {
+                float newValue = negsig(neurons.get(layer+1).get(neuron));
+                neurons.get(layer+1).set(neuron, newValue);
             }
-        }
-        for (int i = 0; i < outputVals.length; i++) {
-            outputVals[i] = negsig(outputVals[i]);
         }
     }
 }

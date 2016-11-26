@@ -1,5 +1,6 @@
     Camera camera;    
     World world;
+    GUI gui;
 // --------------------------------------
         
     void settings() {
@@ -17,7 +18,8 @@
         
         // ----
         world = new World();
-        camera = new Camera(world);
+        camera = new Camera();
+        gui = new GUI();
     }
      
     void draw () {
@@ -25,13 +27,15 @@
         background(0,0,0);
         scale(1,-1);
         translate(0, -height);
-        camera.draw();
         // ----
+        camera.draw();
         world.draw();
+        gui.draw();
     }
 
     void mousePressed() {
         camera.mousePressed();
+        gui.mousePressed();
     }
     
     void mouseDragged(MouseEvent event) {
@@ -49,4 +53,6 @@
     void keyPressed() {
         world.keyPressed();
         camera.keyPressed();
+        // ---
+        gui.keyPressed();
     }

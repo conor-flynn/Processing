@@ -1,6 +1,6 @@
     class Camera {
       
-        World world;
+        PVector botLeft, botRight, topLeft, topRight;
       
         boolean mouseDown;
         PVector dragStart;
@@ -8,15 +8,13 @@
         PVector worldCenter;
         float zoomLevel;
         
-        public Camera(World _world) {
+        public Camera() {
             mouseDown = false;
             dragStart = new PVector();
             location = new PVector();
             zoomLevel = -1;
-            
-            world = _world;
               
-            float part = world.numTiles * world.tileWidth / 8.0;
+            float part = Settings.WORLD_WIDTH / 8.0;
             worldCenter = new PVector(-part, -part);
             
             resetPosition();

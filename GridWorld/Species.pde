@@ -5,11 +5,13 @@ class Species {
     ArrayList<Creature> creatures = new ArrayList<Creature>();
     ArrayList<Creature> preGrave = new ArrayList<Creature>();
     ArrayList<Integer> creatureSpawns = new ArrayList<Integer>();
+    ArrayList<Integer> defaultBrain = new ArrayList<Integer>();
     
-    public Species(World world, int numCreatures, ArrayList<Integer> creatureSpawns) {  
+    public Species(World world, int numCreatures, ArrayList<Integer> creatureSpawns, ArrayList<Integer> defaultBrain) {  
         this.world = world;
         this.numCreatures = numCreatures;
-        this.creatureSpawns = new ArrayList<Integer>(creatureSpawns);        
+        this.creatureSpawns = new ArrayList<Integer>(creatureSpawns);
+        this.defaultBrain = defaultBrain;
         
         if (this.numCreatures <= 0) println("No creatures");
         if (this.creatureSpawns.size() <= 0) println("No spawns");
@@ -23,10 +25,11 @@ class Species {
         Tile tile = findCreatureSpawn();
         if (tile == null) return;
         
-        Creature creature = new Creature(world, this);
+        Creature creature = new Creature(this);
         if (creature == null) return;
         
         tile.creature = creature;
+        creature.brain = new Brain(defaultBrain);
         creature.tile = tile;
         creature.red = random(255);
         creature.green = random(255);

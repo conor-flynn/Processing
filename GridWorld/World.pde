@@ -4,16 +4,9 @@
     class World {  
       
         ArrayList<Tile> tiles = new ArrayList<Tile>();
-        int numTiles;
-        int tileWidth;
-        
-        int numSpecies = 10;
-        int numCreaturesPerSpecies = 10;
-        int numFood = 200;
         
         
         PFont font;
-        int targetFrameRate = 200;
         int generation = 0;
         
         ArrayList<Species> species = new ArrayList<Species>();
@@ -22,22 +15,24 @@
         ArrayList<Integer> creatureSpawns = new ArrayList<Integer>();
         ArrayList<Integer> foodSpawns = new ArrayList<Integer>();
         
+        
+        
         public World() {
             font = createFont("Arial", 160, true);
-            tileWidth = 30;
-            numTiles = 50;
-            frameRate(targetFrameRate);
-            for (int y = 0; y < numTiles; y++) {
-                for (int x = 0; x < numTiles; x++) {
-                    int xx = x * tileWidth;
-                    int yy = y * tileWidth;
+            frameRate(Settings.TARGET_FRAME_RATE);
+            
+            for (int y = 0; y < Settings.NUM_TILES; y++) {
+                for (int x = 0; x < Settings.NUM_TILES; x++) {
+                  
+                    int xx = x * Settings.TILE_WIDTH;
+                    int yy = y * Settings.TILE_WIDTH;
                     color cc = color(255);
-                    int index = x + (y*numTiles);
-                    tiles.add(new Tile(xx, yy, tileWidth-2, cc, index));
+                    int index = x + (y*Settings.NUM_TILES);
+                    tiles.add(new Tile(xx, yy, Settings.TILE_WIDTH-2, cc, index));
                     
                     int size = 2;
                     int lower = size;
-                    int upper = numTiles - size;
+                    int upper = Settings.NUM_TILES - size;
                     if (x < lower || x > upper) {
                         creatureSpawns.add(index);                        
                     }
@@ -55,7 +50,7 @@
                 }
             }
             
-            for(int i = 0; i < numFood; i++) {
+            for(int i = 0; i < Settings.NUM_FOOD; i++) {
                 Tile tile = findFoodSpawn();
                 if (tile == null) continue;
                 Food food = new Food(tile.x, tile.y, tile.w, tile.c, tile.worldIndex);
@@ -66,8 +61,12 @@
                 addNeighbors(tiles.get(i), i);
             }
         
-            for (int i = 0; i < numSpecies; i++) {
-               Species species = new Species(this, numCreaturesPerSpecies, creatureSpawns);
+            ArrayList<Integer> defaultBrain = new ArrayList<Integer>();
+            defaultBrain.add(22); // Inputs
+            defaultBrain.add(16); // Hidden
+            defaultBrain.add(3);  // Outputs
+            for (int i = 0; i < Settings.NUM_SPECIES; i++) {
+               Species species = new Species(this, Settings.NUM_CREATURES_PER_SPECIES, creatureSpawns, defaultBrain);
                this.species.add(species);
             }
         }
@@ -75,25 +74,25 @@
         HashMap<Integer, Integer> getValidNeighbors(int index) {
             HashMap<Integer, Integer> dirs = new HashMap<Integer, Integer>();
             
-            int n  = +numTiles  + index;
+            int n  = +Settings.NUM_TILES  + index;
             int ne = n+1;
             int nw = n-1;
-            int s  = -numTiles + index;
+            int s  = -Settings.NUM_TILES + index;
             int se = s+1;
             int sw = s-1;
             int e  = +1 + index;
             int w  = -1 + index;
             
-            if (index < numTiles) {
+            if (index < Settings.NUM_TILES) {
                 s = se = sw = -1;
             }
-            if (index >= ((numTiles*numTiles)-numTiles)) {
+            if (index >= ((Settings.NUM_TILES*Settings.NUM_TILES)-Settings.NUM_TILES)) {
                 n = ne = nw = -1;
             }
-            if (index % numTiles == 0) {
+            if (index % Settings.NUM_TILES == 0) {
                 nw = sw = w = -1;
             }
-            if ((index+1) % numTiles == 0) {
+            if ((index+1) % Settings.NUM_TILES == 0) {
                 ne = se = e = -1;
             }
             // This ordering has to match the Direction enum
@@ -118,7 +117,7 @@
         
         boolean validIndex(int i) {
             if (i < 0) return false;
-            if (i >= numTiles*numTiles) return false;
+            if (i >= tiles.size()) return false;
             return true;
         }
         
@@ -162,7 +161,7 @@
             }
             text("Frame rate : " + frameRate, xx, yy);
             yy += 50;
-            text("Targe rate : " + targetFrameRate, xx, yy);
+            text("Targe rate : " + Settings.TARGET_FRAME_RATE, xx, yy);
             yy += 50;
             text("Generation : " + generation++, xx, yy);
         }        
@@ -194,13 +193,13 @@
         
         void keyPressed() {
             if (key == 'q') {
-               targetFrameRate *= 1.1;
-               if (targetFrameRate < 10) targetFrameRate++;
-               frameRate(targetFrameRate);
+               Settings.TARGET_FRAME_RATE *= 1.1;
+               if (Settings.TARGET_FRAME_RATE < 10) Settings.TARGET_FRAME_RATE++;
+               frameRate(Settings.TARGET_FRAME_RATE);
             } else if (key == 'w') {
-               targetFrameRate *= 0.9;
-               if (targetFrameRate < 1) targetFrameRate = 1;
-               frameRate(targetFrameRate);
+               Settings.TARGET_FRAME_RATE *= 0.9;
+               if (Settings.TARGET_FRAME_RATE < 1) Settings.TARGET_FRAME_RATE = 1;
+               frameRate(Settings.TARGET_FRAME_RATE);
             }
         }
     }
