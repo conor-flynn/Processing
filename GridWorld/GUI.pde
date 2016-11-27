@@ -108,8 +108,8 @@
             int creature_index = -1;
             int global_max_gen = -1;
             
-            int xx = 1500;
-            int yy = -1500;
+            int xx = Settings.WORLD_WIDTH;
+            int yy = -Settings.WORLD_WIDTH;
             for (int i = 0; i < world.species.size(); i++) {
                 Species target = world.species.get(i);
                 int max_gen = -1;
@@ -141,6 +141,10 @@
             text("Targe rate : " + Settings.TARGET_FRAME_RATE, xx, yy);
             yy += 50;
             text("Generation : " + world.generation++, xx, yy);
+            yy += 50;
+            text("Plant Matter Consumed : " + world.plantMatterConsumed, xx, yy);
+            yy += 50;
+            text("Creature Matter Consumed : " + world.creatureMatterConsumed, xx, yy);
             scale(1,-1);
             
             // +~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~

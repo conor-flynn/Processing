@@ -3,6 +3,8 @@
     import java.util.*;
     class World {  
         GUI gui;
+        float plantMatterConsumed = 0;
+        float creatureMatterConsumed = 0;
       
         ArrayList<Tile> tiles = new ArrayList<Tile>();
         

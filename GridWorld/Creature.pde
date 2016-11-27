@@ -61,7 +61,6 @@ class Creature {
         float speciesLimiter = species.creatures.size() / 3000.0;
         float decayRate = 0.0025 + speciesLimiter;
         
-        // Looking for a decayRate=0.01 for species with a count of 10-ish
         float decayAmount = life * decayRate;
         if (decayAmount < decayRate) decayAmount = decayRate;
         life -= decayAmount;        
@@ -116,7 +115,7 @@ class Creature {
         float x = results.get(0);
         float y = results.get(1);
         
-        float limit = 0.0001;
+        float limit = 0.0005;
         if (abs(x) > limit || abs(y) > limit) {
             tryMove(x,y);
             return;
@@ -177,8 +176,8 @@ class Creature {
         if (life < starting_life) {
             return;
         }
-        float cost = life * 0.45;
-        float pass = cost * 0.95;
+        float cost = life * Settings.CREATURE_CHILD_SACRIFICE_AMOUNT;
+        float pass = cost * Settings.REPRODUCTION_EFFICIENCY;
         if (pass < (starting_life * 0.5)) {
             return;
         }
@@ -203,19 +202,19 @@ class Creature {
         }
     }
     
-    void tryEat() {
-       HashMap<Integer, Food> foods = getNearbyFoods();
+    //void tryEat() {
+    //   HashMap<Integer, Food> foods = getNearbyFoods();
         
-        if (foods.size() != 0) {
-            float gather = 0.4;
-            float per = gather / foods.size();
-            for (Map.Entry me : foods.entrySet()) {
-                Food food = (Food)me.getValue();
-                food.amount -= per;
-            }
-            life += gather;
-        } 
-    }
+    //    if (foods.size() != 0) {
+    //        float gather = 0.4;
+    //        float per = gather / foods.size();
+    //        for (Map.Entry me : foods.entrySet()) {
+    //            Food food = (Food)me.getValue();
+    //            food.amount -= per;
+    //        }
+    //        life += gather;
+    //    } 
+    //}
     
     void tryMove(float x, float y) {
       
@@ -260,16 +259,18 @@ class Creature {
                    if (target.creature.markedForDeath) return;
                    if (target.creature.life <= 0) return;
                    
-                   float steal = life * 0.40;
+                   float steal = life * Settings.CREATURE_VS_CREATURE_EAT_PROPORTION;
                    if (steal > target.creature.life) steal = target.creature.life;
                    
                    target.creature.life -= steal;
-                   steal *= 0.8;
+                   steal *= Settings.CREATURE_VS_CREATURE_EAT_EFFICIENCY;
+                   species.world.creatureMatterConsumed += steal;
                    life += steal;
                }               
             } else {
                 Food food = (Food)target;
                 life += food.amount;
+                species.world.plantMatterConsumed += food.amount;
                 food.amount -= food.amount;
             }
         }
