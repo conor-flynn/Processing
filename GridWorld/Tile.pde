@@ -2,7 +2,7 @@
         int x;
         int y;
         int w;
-        color c;
+        Biome biome;
         
         int worldIndex;
         
@@ -14,11 +14,11 @@
         // ----
         
         
-        public Tile(int xx, int yy, int ww, color cc, int index) {
+        public Tile(int xx, int yy, int ww, int index, Biome biome) {
             x = xx;
             y = yy;
             w = ww;
-            c = cc;
+            this.biome = biome;
             worldIndex = index;
             neighbors = new HashMap<Integer, Tile>();
             // ----
@@ -30,6 +30,10 @@
                 println("Tile has a creature, but creature doesn't have tile");
                 return;
             }
+            color c = color(
+                      biome.color_red   * biome.tile_intensity, 
+                      biome.color_green * biome.tile_intensity, 
+                      biome.color_blue  * biome.tile_intensity);
             fill(c);
             rect(x-w/2,y-w/2,w,w);
         } 

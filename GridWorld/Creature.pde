@@ -92,7 +92,7 @@ class Creature {
                 Tile target = tile.neighbors.get(i);
                 if (target instanceof Food) {
                     Food food = (Food)target;
-                    inputs.add(food.amount);
+                    inputs.add(food.current_life);
                 } else {
                     inputs.add(0.0);
                 }
@@ -269,9 +269,9 @@ class Creature {
                }               
             } else {
                 Food food = (Food)target;
-                life += food.amount;
-                species.world.plantMatterConsumed += food.amount;
-                food.amount -= food.amount;
+                life += food.current_life;
+                species.world.plantMatterConsumed += food.current_life;
+                food.current_life -= food.current_life;
             }
         }
     }
@@ -321,7 +321,7 @@ class Creature {
             Tile t = (Tile)me.getValue();
             if (t instanceof Food) {
                 Food f = (Food)t;
-                if (f.amount > 0.3)
+                if (f.current_life > 0.3)
                 result.put(dir, (Food)t);
             }
         }

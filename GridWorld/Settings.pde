@@ -1,10 +1,11 @@
     static class Settings {
       
          // Game settings
+             static final String WORLD_FILE_NAME = "world2.json";
              static int TARGET_FRAME_RATE = 600;
       
          // World settings
-             static final int NUM_TILES = 100;
+             static int NUM_TILES = -1;
              static final int TILE_WIDTH = 30;
              static final int WORLD_WIDTH = NUM_TILES * TILE_WIDTH;
              
@@ -12,6 +13,8 @@
              static final PVector WORLD_BOT_RIGHT_CORNER = new PVector(WORLD_WIDTH, 0);
              static final PVector WORLD_TOP_LEFT_CORNER = new PVector(0, WORLD_WIDTH);
              static final PVector WORLD_TOP_RIGHT_CORNER = new PVector(WORLD_WIDTH, WORLD_WIDTH);
+             
+             static final float BIOME_BLUR_RATE = 0.2;
          
          // Evolution settings
              static final int NUM_FOOD = 200;
