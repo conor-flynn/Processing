@@ -70,7 +70,7 @@ class Species {
     
     void update() {
         for (int i = 0; i < creatures.size(); i++) {
-           creatures.get(i).update(); 
+           creatures.get(i).update();
         }
         while (preGrave.size() > 0) {
            Creature target = preGrave.get(0);

@@ -205,6 +205,10 @@
             }
             
             println("Tile(" + x_index + "," + y_index + ")");
+            Tile tile = world.tiles.get(tile_index);
+            if (tile.creature != null) {
+                println("Creature(" + tile.creature.life + ")"); 
+            }
             
             return world.tiles.get(tile_index);
         }
@@ -259,6 +263,8 @@
             } else if (key == 'k') {
                println("Location offset : (" + location.x + "," + location.y + ")");
                println("Zoom : (" + zoomLevel + ")");
+            } else if (key == '`') {
+               background(0,0,0); 
             }
             if (key == 'q') {
                Settings.TARGET_FRAME_RATE *= 1.1;

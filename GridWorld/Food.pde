@@ -23,8 +23,7 @@ class Food extends Tile {
     
     void draw() {
         if (shouldRedraw || regrowing || FORCE_REDRAW) {
-            float percentage = 1 - (this.current_life - this.biome.food_energy_amount) / this.biome.food_energy_amount;
-            percentage *= biome.food_intensity;
+            float percentage = biome.food_intensity;
             fill(color(biome.color_red*percentage, biome.color_green*percentage, biome.color_blue*percentage));
             rect(x-w/2,y-w/2,w,w);   
             shouldRedraw = false;

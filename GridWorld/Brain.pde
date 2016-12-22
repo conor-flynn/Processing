@@ -63,8 +63,12 @@ class Brain {
         }
     }
     
+    void multipleMutate() {
+        if (random(1) > 0.2) multipleMutate();
+        mutate();
+    }
+    
     void mutate() {
-        if (random(1) > 0.2) mutate();
         int layer = (int)random(axons.size());
         int neuron = (int)random(axons.get(layer).size());
         int gene = (int)random(axons.get(layer).get(neuron).size());

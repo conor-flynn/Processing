@@ -30,8 +30,8 @@
             ArrayList<Integer> spawn0 = new ArrayList<Integer>();
             x0 = 0;
             y0 = 0;
-            w = 20;
-            h = 20;
+            w = 200;
+            h = 200;
             for (int x = x0; x < x0+w; x++) {
                 for (int y = y0; y < y0+h; y++) {
                     int index = x + (y * Settings.NUM_TILES);
@@ -40,16 +40,17 @@
             }
             ArrayList<Integer> brain0 = new ArrayList<Integer>();
             brain0.add(13);
-            brain0.add(20);
+            brain0.add(30);
+            brain0.add(10);
             brain0.add(3);
             this.species.add(new Species(this, Settings.NUM_CREATURES_PER_SPECIES, spawn0, brain0));
             
             
             ArrayList<Integer> spawn1 = new ArrayList<Integer>();
-            x0 = 76;
+            x0 = 0;
             y0 = 0;
-            w = 20;
-            h = 55;
+            w = 200;
+            h = 200;
             for (int x = x0; x < x0+w; x++) {
                 for (int y = y0; y < y0+h; y++) {
                     int index = x + (y * Settings.NUM_TILES);
@@ -58,9 +59,29 @@
             }
             ArrayList<Integer> brain1 = new ArrayList<Integer>();
             brain1.add(13);
-            brain1.add(10);
+            brain1.add(30);
+            brain1.add(20);
             brain1.add(3);
             this.species.add(new Species(this, Settings.NUM_CREATURES_PER_SPECIES, spawn1, brain1));
+            
+            
+            ArrayList<Integer> spawn2 = new ArrayList<Integer>();
+            x0 = 0;
+            y0 = 0;
+            w = 200;
+            h = 200;
+            for (int x = x0; x < x0+w; x++) {
+                for (int y = y0; y < y0+h; y++) {
+                    int index = x + (y * Settings.NUM_TILES);
+                    spawn2.add(index);
+                }
+            }
+            ArrayList<Integer> brain2 = new ArrayList<Integer>();
+            brain2.add(13);
+            brain2.add(30);
+            brain2.add(30);
+            brain2.add(3);
+            this.species.add(new Species(this, Settings.NUM_CREATURES_PER_SPECIES, spawn2, brain2));
             
             //ArrayList<Integer> defaultBrain = new ArrayList<Integer>();
             //defaultBrain.add(13); // Inputs
@@ -263,7 +284,7 @@
                species.get(i).update(); 
             }
             for (int i = 0; i < species.size(); i++) {
-               species.get(i).draw(); 
+               species.get(i).draw();
             }
         }
         void postDraw() {

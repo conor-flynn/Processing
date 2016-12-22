@@ -44,12 +44,14 @@
                 float r = (biome.color_red * biome.tile_intensity)/255.0;
                 float g = (biome.color_green * biome.tile_intensity)/255.0;
                 float b = (biome.color_blue * biome.tile_intensity)/255.0;                
-                return (r + g + b) * 0.2;
+                return (r + g + b) * 0.25;
             } else {
                 float r = creature.red;
                 float g = creature.green;
                 float b = creature.blue;
-                return (r + g + b) * 0.2 / 255;
+                float v = creature.life / 10;
+                if (v > 1) v = 1;
+                return (((r+g+b)/255)+v)*0.25;
             }
         }
         
