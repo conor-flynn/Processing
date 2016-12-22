@@ -1,5 +1,5 @@
 class Biome {
-    char label;
+    String label;
     float   color_red,
             color_green,
             color_blue,
@@ -11,7 +11,7 @@ class Biome {
             tile_intensity;
     
     public Biome(
-      char label, 
+      String label, 
       float color_red, 
       float color_green, 
       float color_blue,

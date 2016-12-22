@@ -31,6 +31,13 @@ class Creature {
         
     }
     
+    void debugMove() {
+        Object[] data = tile.neighbors.values().toArray();
+        while (true) {
+             
+        }
+    }
+    
     void killCreature() {
         if (markedForDeath) return;
         markedForDeath = true;
@@ -57,6 +64,10 @@ class Creature {
         if (markedForDeath) return;
         
         age++;
+        if (age > 1000) {
+            killCreature();
+            return;
+        }
         
         float speciesLimiter = species.creatures.size() / 3000.0;
         float decayRate = 0.0025 + speciesLimiter;
@@ -68,47 +79,24 @@ class Creature {
         if (life <= 0) {
             killCreature();
             return;
-        } else if (age > 1000) {
-            killCreature();
-            return;
         }
         
         ArrayList<Float> inputs = new ArrayList<Float>();
         for (int i = 0; i < 8; i++) {
             if (tile.neighbors.containsKey(i)) {
                 Tile target = tile.neighbors.get(i);
-                
-                if (target.creature != null) {
-                    inputs.add(1.0);
-                } else {
-                    inputs.add(0.0);
-                }
+                inputs.add(tile.neighbors.get(i).getEvaluation());
             } else {
-                inputs.add(-1.0);
+                inputs.add(0.0);
             }
         }
-        for (int i = 0; i < 8; i++) {
-            if (tile.neighbors.containsKey(i)) {
-                Tile target = tile.neighbors.get(i);
-                if (target instanceof Food) {
-                    Food food = (Food)target;
-                    inputs.add(food.current_life);
-                } else {
-                    inputs.add(0.0);
-                }
-            } else {
-                inputs.add(-1.0);
-            }
-        }
-        inputs.add(sig(life));
-        inputs.add((random(1) > 0.95) ? 1.0 : 0.0);
-        inputs.add((random(1) > 0.05) ? 0.0 : 1.0);
+        inputs.add(tile.getEvaluation());
+        inputs.add(brain.inherited_value);
         inputs.add(random(1));
         inputs.add(1.0);
         int _outLayer = brain.neurons.size()-1;
         int _memoryNeuron = brain.neurons.get(_outLayer).size()-1;
         inputs.add((brain.neurons.get(_outLayer).get(_memoryNeuron)));
-        
         
         brain.process(inputs);
         ArrayList<Float> results = brain.neurons.get(brain.neurons.size()-1);
@@ -253,6 +241,7 @@ class Creature {
             if (!(target instanceof Food)) {
                if (target.creature == null) {
                    tile.creature = null;
+                   tile.shouldRedraw = true;
                    tile = target;
                    tile.creature = this;  
                } else {
@@ -272,6 +261,7 @@ class Creature {
                 life += food.current_life;
                 species.world.plantMatterConsumed += food.current_life;
                 food.current_life -= food.current_life;
+                target.shouldRedraw = true;
             }
         }
     }
@@ -287,13 +277,13 @@ class Creature {
         int y = tile.y;
         int w = tile.w;
         
-        x += 3;
-        y += 3;
+        x += 5;
+        y += 5;
         
         x -= w/2;
         y -= w/2;     
         
-        w -= 6;
+        w -= 10;
         fill(color(red, green, blue));        
         rect(x,y,w,w);
     }

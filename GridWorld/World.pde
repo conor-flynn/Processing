@@ -1,13 +1,13 @@
       
     import java.util.Map;   
     import java.util.*;
-    class World {  
+    class World {        
         GUI gui;
         float plantMatterConsumed = 0;
         float creatureMatterConsumed = 0;
       
         ArrayList<Tile> tiles = new ArrayList<Tile>();
-        HashMap<Character, Biome> biomes = new HashMap<Character, Biome>();
+        HashMap<String, Biome> biomes = new HashMap<String, Biome>();
         
         int generation = 0;
         
@@ -24,8 +24,46 @@
             frameRate(Settings.TARGET_FRAME_RATE);
             loadFromFile(Settings.WORLD_FILE_NAME);
             
+            int x0, y0, w, h;
+            
+            
+            ArrayList<Integer> spawn0 = new ArrayList<Integer>();
+            x0 = 0;
+            y0 = 0;
+            w = 20;
+            h = 20;
+            for (int x = x0; x < x0+w; x++) {
+                for (int y = y0; y < y0+h; y++) {
+                    int index = x + (y * Settings.NUM_TILES);
+                    spawn0.add(index);
+                }
+            }
+            ArrayList<Integer> brain0 = new ArrayList<Integer>();
+            brain0.add(13);
+            brain0.add(20);
+            brain0.add(3);
+            this.species.add(new Species(this, Settings.NUM_CREATURES_PER_SPECIES, spawn0, brain0));
+            
+            
+            ArrayList<Integer> spawn1 = new ArrayList<Integer>();
+            x0 = 76;
+            y0 = 0;
+            w = 20;
+            h = 55;
+            for (int x = x0; x < x0+w; x++) {
+                for (int y = y0; y < y0+h; y++) {
+                    int index = x + (y * Settings.NUM_TILES);
+                    spawn1.add(index);
+                }
+            }
+            ArrayList<Integer> brain1 = new ArrayList<Integer>();
+            brain1.add(13);
+            brain1.add(10);
+            brain1.add(3);
+            this.species.add(new Species(this, Settings.NUM_CREATURES_PER_SPECIES, spawn1, brain1));
+            
             //ArrayList<Integer> defaultBrain = new ArrayList<Integer>();
-            //defaultBrain.add(22); // Inputs
+            //defaultBrain.add(13); // Inputs
             //defaultBrain.add(16); // Hidden
             //defaultBrain.add(3);  // Outputs
             //for (int i = 0; i < Settings.NUM_SPECIES; i++) {
@@ -42,12 +80,11 @@
             for (int biomeIndex = 0; biomeIndex < biomesData.size(); biomeIndex++) {
                 JSONObject biomeData = biomesData.getJSONObject(biomeIndex);
                 
-                String _label = biomeData.getString("label");
-                if (_label.length() > 1) {
-                    println("World data : Labels should only be a single character");
+                String label = biomeData.getString("label");
+                if (label.length() > 2) {
+                    println("World data : Labels must be 2 characters.");
                     return;
-                }
-                char label          = _label.charAt(0);                
+                }        
                 Biome biome = new Biome(
                                 label, 
                                 
@@ -66,10 +103,11 @@
                 biomes.put(label, biome);
             }
             int num_rows = tileData.size();
-            int num_columns = tileData.getString(0).length();
+            int num_columns = tileData.getString(0).length()/2;
             Settings.NUM_TILES = num_rows;
+            Settings.WORLD_WIDTH = Settings.NUM_TILES * Settings.TILE_WIDTH;
             for (int rowIndex = 0; rowIndex < tileData.size(); rowIndex++) {
-                if (tileData.getString(rowIndex).length() != num_columns) {
+                if (tileData.getString(rowIndex).length()/2 != num_rows) {
                     println("The world needs to be perfect square."); 
                 } 
                 
@@ -85,20 +123,21 @@
             for (int rowIndex = 0; rowIndex < reversedData.size(); rowIndex++) {
                 String _rowData = reversedData.get(rowIndex);
                 char[] rowData = _rowData.toCharArray();
-                for (int colData = 0; colData < rowData.length; colData++) {
-                    char label = rowData[colData];
+                for (int colIter = 0; colIter < rowData.length; colIter+=2) {
+                    String label = Character.toString(rowData[colIter]) + Character.toString(rowData[colIter+1]);
                     Biome target = biomes.get(label);
                     if (target == null) {
                         println("Cannot find biome");
                         return;
                     }
-                    int x = (colData * Settings.TILE_WIDTH);
+                    
+                    int colIndex = colIter/2;
+                    int x = (colIndex * Settings.TILE_WIDTH);
                         x+= tileOffset.x;
                     int y = (rowIndex * Settings.TILE_WIDTH);
                         y+= tileOffset.y;
                     int w = Settings.TILE_WIDTH - 2;
-                    int index = colData + (rowIndex * rowData.length);
-                    
+                    int index = colIndex + (rowIndex * Settings.NUM_TILES);
                     tiles.add(buildTileFromFile(target, x, y, w, index));
                 }
             }
@@ -107,7 +146,18 @@
                 addNeighbors(tiles.get(i), i); 
             }
             
+            ArrayList<Integer> tempList = new ArrayList<Integer>(tiles.size());
+            for (int i = 0; i < tiles.size(); i++) { 
+                tempList.add(i);
+            }
+            ArrayList<Integer> blurList = new ArrayList<Integer>(tiles.size());
             for (int i = 0; i < tiles.size(); i++) {
+                int index = (int)random(0, tempList.size());
+                Integer target = tempList.get(index);
+                tempList.remove(index);
+                blurList.add(target);
+            }
+            for (Integer i : blurList) {
                 if (random(1) < Settings.BIOME_BLUR_RATE) {
                      Tile self = tiles.get(i);
                      Biome newBiome = null;
@@ -122,6 +172,22 @@
                      }
                 }
             }
+            
+            //for (int i = 0; i < tiles.size(); i++) {
+            //    if (random(1) < Settings.BIOME_BLUR_RATE) {
+            //         Tile self = tiles.get(i);
+            //         Biome newBiome = null;
+            //         for (Map.Entry me : self.neighbors.entrySet()) {
+            //             Biome target = ((Tile)me.getValue()).biome;
+            //             if (self.biome != target) {
+            //                 newBiome = target; 
+            //             }
+            //         }
+            //         if (newBiome != null) {
+            //             tiles.get(i).biome = newBiome; 
+            //         }
+            //    }
+            //}
         }
         
         Tile buildTileFromFile(Biome target, int x, int y, int w, int index) {
@@ -192,7 +258,7 @@
             for (int i = 0; i < tiles.size(); i++) {
                 tiles.get(i).update();
                 tiles.get(i).draw();
-            }
+            }       
             for (int i = 0; i < species.size(); i++) {
                species.get(i).update(); 
             }
@@ -239,12 +305,14 @@
         
         
         void mouseWheel(MouseEvent event) {
+            FORCE_REDRAW = true;
             gui.mouseWheel(event); 
         }
         void mouseReleased() {
             gui.mouseReleased(); 
         }
         void mouseDragged(MouseEvent event) {
+            FORCE_REDRAW = true;
             gui.mouseDragged(event); 
         }
         void keyPressed() {

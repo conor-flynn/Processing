@@ -74,7 +74,10 @@ class Species {
         }
         while (preGrave.size() > 0) {
            Creature target = preGrave.get(0);
-           world.tiles.get(target.tile.worldIndex).creature = null;
+           target.tile.shouldRedraw = true;
+           target.tile.creature = null;
+           //world.tiles.get(target.tile.worldIndex).shouldRedraw = true;
+           //world.tiles.get(target.tile.worldIndex).creature = null;
            boolean deleted = false;
            for (int i = 0; i < creatures.size(); i++) {
               if (creatures.get(i) == target) {

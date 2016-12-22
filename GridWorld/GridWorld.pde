@@ -20,13 +20,16 @@
      
     void draw () {
         // ----
-        background(0,0,0);
+        if (FORCE_REDRAW) {
+            background(0,0,0);
+        }
         scale(1,-1);
         translate(0, -height);
         // ----
         world.preDraw();
         world.draw();
         world.postDraw();
+        FORCE_REDRAW = false;
     }
 
     void mousePressed() {

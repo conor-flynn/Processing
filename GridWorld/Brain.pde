@@ -1,5 +1,7 @@
 class Brain {
   
+    float inherited_value;
+  
     ArrayList<ArrayList<Float>> neurons = new ArrayList<ArrayList<Float>>();
     ArrayList<ArrayList<ArrayList<Float>>> axons = new ArrayList<ArrayList<ArrayList<Float>>>();
        
@@ -33,7 +35,7 @@ class Brain {
                 axons.add(axons2);
             }
         }
-        
+        this.inherited_value = random(1);
     }
     
     void copyBrain(Brain other) {

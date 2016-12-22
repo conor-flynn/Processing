@@ -108,8 +108,17 @@
             int creature_index = -1;
             int global_max_gen = -1;
             
-            int xx = Settings.WORLD_WIDTH;
-            int yy = -Settings.WORLD_WIDTH;
+            int xx = 0;//Settings.WORLD_WIDTH;
+            int yy = 24;//-Settings.WORLD_WIDTH;
+            
+            int x0 = xx-10;
+            int y0 = yy-30;
+            int w0 = 650;
+            int h0 = 250 + (150 * (world.species.size()));
+            fill(255,0,0);
+            rect(x0,y0,w0,h0);
+            
+            fill(255);
             for (int i = 0; i < world.species.size(); i++) {
                 Species target = world.species.get(i);
                 int max_gen = -1;
@@ -194,6 +203,9 @@
                 println("Fatal: getTileFromMouse() returning illegal tile index.");
                 return null;
             }
+            
+            println("Tile(" + x_index + "," + y_index + ")");
+            
             return world.tiles.get(tile_index);
         }
         

@@ -1,13 +1,16 @@
+    
+    Boolean FORCE_REDRAW = false;
+    
     static class Settings {
       
          // Game settings
-             static final String WORLD_FILE_NAME = "world2.json";
-             static int TARGET_FRAME_RATE = 600;
+             static final String WORLD_FILE_NAME = "world3.json";
+             static int TARGET_FRAME_RATE = 1000;
       
          // World settings
              static int NUM_TILES = -1;
              static final int TILE_WIDTH = 30;
-             static final int WORLD_WIDTH = NUM_TILES * TILE_WIDTH;
+             static int WORLD_WIDTH = -1;
              
              static final PVector WORLD_BOT_LEFT_CORNER = new PVector(0, 0);
              static final PVector WORLD_BOT_RIGHT_CORNER = new PVector(WORLD_WIDTH, 0);
@@ -19,7 +22,7 @@
          // Evolution settings
              static final int NUM_FOOD = 200;
              static final int NUM_SPECIES = 5;
-             static final int NUM_CREATURES_PER_SPECIES = 10;
+             static final int NUM_CREATURES_PER_SPECIES = 1;
              
              static final float FOOD_GROWTH_RATE = 0.3;
              static final float FOOD_SPAWN_AMOUNT = 1.0;
