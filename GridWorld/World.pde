@@ -41,7 +41,6 @@
             ArrayList<Integer> brain0 = new ArrayList<Integer>();
             brain0.add(13);
             brain0.add(30);
-            brain0.add(10);
             brain0.add(3);
             this.species.add(new Species(this, Settings.NUM_CREATURES_PER_SPECIES, spawn0, brain0));
             
@@ -59,7 +58,6 @@
             }
             ArrayList<Integer> brain1 = new ArrayList<Integer>();
             brain1.add(13);
-            brain1.add(30);
             brain1.add(20);
             brain1.add(3);
             this.species.add(new Species(this, Settings.NUM_CREATURES_PER_SPECIES, spawn1, brain1));
@@ -78,8 +76,7 @@
             }
             ArrayList<Integer> brain2 = new ArrayList<Integer>();
             brain2.add(13);
-            brain2.add(30);
-            brain2.add(30);
+            brain2.add(10);
             brain2.add(3);
             this.species.add(new Species(this, Settings.NUM_CREATURES_PER_SPECIES, spawn2, brain2));
             

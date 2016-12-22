@@ -23,10 +23,10 @@
              static final int NUM_SPECIES = 5;
              static final int NUM_CREATURES_PER_SPECIES = 30;
              
-             static final float REPRODUCTION_EFFICIENCY = 0.9; // How much energy gets passed to the child. 0.3 means 70% of the energy is lost.
+             static final float REPRODUCTION_EFFICIENCY = 1.0; // How much energy gets passed to the child. 0.3 means 70% of the energy is lost.
              static final float CREATURE_CHILD_SACRIFICE_AMOUNT = 0.45; // How much of the creatures life is devoted t the child.
              
-             static final float CREATURE_MINIMUM_DECAY_AMOUNT = 0.01;
+             static final float CREATURE_MINIMUM_DECAY_AMOUNT = 0.02;
              static final int CREATURE_STALL_MUTATION_LIMIT = 100;
              static final int CREATURE_DEATH_AGE = 1000;
              static final float CREATURE_PLANT_EAT_AMOUNT = 0.1;

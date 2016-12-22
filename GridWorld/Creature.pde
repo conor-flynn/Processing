@@ -103,7 +103,6 @@ class Creature {
                  brain.mutate();
                  mutateColor(this);
                  hasNotMoved = 0;
-                 println(".");
             }
             return;
         }
@@ -156,8 +155,10 @@ class Creature {
     }
     
     void tryReproduce() {
-        float cost = life * Settings.CREATURE_CHILD_SACRIFICE_AMOUNT;
-        float pass = cost * Settings.REPRODUCTION_EFFICIENCY;
+        //float cost = life * Settings.CREATURE_CHILD_SACRIFICE_AMOUNT;
+        //float pass = cost * Settings.REPRODUCTION_EFFICIENCY;
+        
+        if (life < 1) return;
       
         Tile openSpot = findReproductionTile();
         if (openSpot == null) return;
@@ -171,8 +172,8 @@ class Creature {
           newCreature.generation = generation+1;
         species.creatures.add(newCreature);
         
-        newCreature.life = pass;
-        life -= cost;
+        newCreature.life = 1;
+        life -= 1;
         if (life < 0) {
             killCreature();
             return;
