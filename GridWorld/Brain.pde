@@ -64,7 +64,7 @@ class Brain {
     }
     
     void multipleMutate() {
-        if (random(1) > 0.2) multipleMutate();
+        if (random(1) > 0.1) multipleMutate();
         mutate();
     }
     

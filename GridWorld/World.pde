@@ -30,8 +30,8 @@
             ArrayList<Integer> spawn0 = new ArrayList<Integer>();
             x0 = 0;
             y0 = 0;
-            w = 200;
-            h = 200;
+            w = 100;
+            h = 100;
             for (int x = x0; x < x0+w; x++) {
                 for (int y = y0; y < y0+h; y++) {
                     int index = x + (y * Settings.NUM_TILES);
@@ -48,8 +48,8 @@
             ArrayList<Integer> spawn1 = new ArrayList<Integer>();
             x0 = 0;
             y0 = 0;
-            w = 200;
-            h = 200;
+            w = 100;
+            h = 100;
             for (int x = x0; x < x0+w; x++) {
                 for (int y = y0; y < y0+h; y++) {
                     int index = x + (y * Settings.NUM_TILES);
@@ -66,8 +66,8 @@
             ArrayList<Integer> spawn2 = new ArrayList<Integer>();
             x0 = 0;
             y0 = 0;
-            w = 200;
-            h = 200;
+            w = 100;
+            h = 100;
             for (int x = x0; x < x0+w; x++) {
                 for (int y = y0; y < y0+h; y++) {
                     int index = x + (y * Settings.NUM_TILES);
@@ -76,7 +76,7 @@
             }
             ArrayList<Integer> brain2 = new ArrayList<Integer>();
             brain2.add(13);
-            brain2.add(10);
+            brain2.add(15);
             brain2.add(3);
             this.species.add(new Species(this, Settings.NUM_CREATURES_PER_SPECIES, spawn2, brain2));
             

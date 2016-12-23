@@ -154,11 +154,8 @@ class Creature {
         blue = clamp(blue, 0, 255);
     }
     
-    void tryReproduce() {
-        //float cost = life * Settings.CREATURE_CHILD_SACRIFICE_AMOUNT;
-        //float pass = cost * Settings.REPRODUCTION_EFFICIENCY;
-        
-        if (life < 1) return;
+    void tryReproduce() {        
+        float cost = life * Settings.CREATURE_CHILD_SACRIFICE_AMOUNT;
       
         Tile openSpot = findReproductionTile();
         if (openSpot == null) return;
@@ -172,8 +169,8 @@ class Creature {
           newCreature.generation = generation+1;
         species.creatures.add(newCreature);
         
-        newCreature.life = 1;
-        life -= 1;
+        newCreature.life = cost*0.9;
+        life -= cost;
         if (life < 0) {
             killCreature();
             return;
