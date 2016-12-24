@@ -24,6 +24,26 @@
             frameRate(Settings.TARGET_FRAME_RATE);
             loadFromFile(Settings.WORLD_FILE_NAME);
             
+            int num_outputs = 3;
+            int num_memory = 3;            
+            
+            ArrayList<BrainInput> brain0 = new ArrayList<BrainInput>();
+            brain0.add(new BrainInput(-1, 0));
+            brain0.add(new BrainInput(+1, 0));
+            brain0.add(new BrainInput( 0,-1));
+            brain0.add(new BrainInput( 0,+1));
+            
+            
+            ArrayList<BrainInput> brain1 = new ArrayList<BrainInput>();
+            brain1.add(new BrainInput(-1, 0));
+            brain1.add(new BrainInput(+1, 0));
+            brain1.add(new BrainInput( 0,-1));
+            brain1.add(new BrainInput( 0,+1));
+            brain1.add(new BrainInput(+1,+1));
+            brain1.add(new BrainInput(-1,+1));
+            brain1.add(new BrainInput(-1,-1));
+            brain1.add(new BrainInput(+1,-1));
+            
             int x0, y0, w, h;
             
             
@@ -38,56 +58,21 @@
                     spawn0.add(index);
                 }
             }
-            ArrayList<Integer> brain0 = new ArrayList<Integer>();
-            brain0.add(13);
-            brain0.add(30);
-            brain0.add(3);
-            this.species.add(new Species(this, Settings.NUM_CREATURES_PER_SPECIES, spawn0, brain0));
+            this.species.add(new Species(this, Settings.NUM_CREATURES_PER_SPECIES, spawn0, brain0, num_memory, num_outputs));
             
             
-            ArrayList<Integer> spawn1 = new ArrayList<Integer>();
-            x0 = 0;
-            y0 = 0;
-            w = 100;
-            h = 100;
-            for (int x = x0; x < x0+w; x++) {
-                for (int y = y0; y < y0+h; y++) {
-                    int index = x + (y * Settings.NUM_TILES);
-                    spawn1.add(index);
-                }
-            }
-            ArrayList<Integer> brain1 = new ArrayList<Integer>();
-            brain1.add(13);
-            brain1.add(20);
-            brain1.add(3);
-            this.species.add(new Species(this, Settings.NUM_CREATURES_PER_SPECIES, spawn1, brain1));
-            
-            
-            ArrayList<Integer> spawn2 = new ArrayList<Integer>();
-            x0 = 0;
-            y0 = 0;
-            w = 100;
-            h = 100;
-            for (int x = x0; x < x0+w; x++) {
-                for (int y = y0; y < y0+h; y++) {
-                    int index = x + (y * Settings.NUM_TILES);
-                    spawn2.add(index);
-                }
-            }
-            ArrayList<Integer> brain2 = new ArrayList<Integer>();
-            brain2.add(13);
-            brain2.add(15);
-            brain2.add(3);
-            this.species.add(new Species(this, Settings.NUM_CREATURES_PER_SPECIES, spawn2, brain2));
-            
-            //ArrayList<Integer> defaultBrain = new ArrayList<Integer>();
-            //defaultBrain.add(13); // Inputs
-            //defaultBrain.add(16); // Hidden
-            //defaultBrain.add(3);  // Outputs
-            //for (int i = 0; i < Settings.NUM_SPECIES; i++) {
-            //   Species species = new Species(this, Settings.NUM_CREATURES_PER_SPECIES, creatureSpawns, defaultBrain);
-            //   this.species.add(species);
+            //ArrayList<Integer> spawn1 = new ArrayList<Integer>();
+            //x0 = 0;
+            //y0 = 0;
+            //w = 100;
+            //h = 100;
+            //for (int x = x0; x < x0+w; x++) {
+            //    for (int y = y0; y < y0+h; y++) {
+            //        int index = x + (y * Settings.NUM_TILES);
+            //        spawn1.add(index);
+            //    }
             //}
+            //this.species.add(new Species(this, Settings.NUM_CREATURES_PER_SPECIES, spawn1, brain1, num_outputs));
         }
         
         public void loadFromFile(String filename) {

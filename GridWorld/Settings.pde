@@ -21,7 +21,7 @@
          
          // Evolution settings
              static final int NUM_SPECIES = 5;
-             static final int NUM_CREATURES_PER_SPECIES = 10;
+             static final int NUM_CREATURES_PER_SPECIES = 1;
              
              static final float REPRODUCTION_EFFICIENCY = 1.0; // How much energy gets passed to the child. 0.3 means 70% of the energy is lost.
              static final float CREATURE_CHILD_SACRIFICE_AMOUNT = 0.45; // How much of the creatures life is devoted t the child.

@@ -24,7 +24,7 @@ class Creature {
         
         starting_life = 1;
           
-        brain = new Brain(null);
+        brain = null;
         life = starting_life;
         age = 0;
         generation = 0;
@@ -47,14 +47,6 @@ class Creature {
             println("Creature with no brain.");
             return;
         }
-        if (brain.neurons.size() == 0) {
-            println("Creature with empty neurons.");
-            return;
-        }
-        if (brain.axons.size() == 0) {
-            println("Creature with empty axons.");
-            return;
-        }
         if (markedForDeath) return;
         
         age++;
@@ -71,31 +63,24 @@ class Creature {
         }
         
         ArrayList<Float> inputs = new ArrayList<Float>();
-        for (int i = 0; i < 8; i++) {
-            if (tile.neighbors.containsKey(i)) {
-                Tile target = tile.neighbors.get(i);
-                inputs.add(tile.neighbors.get(i).getEvaluation());
+        for (BrainInput input : brain.brain_inputs) {
+            int index = tile.worldIndex + (input.x + (Settings.NUM_TILES * input.y));
+            if (index < 0 || index >= (Settings.NUM_TILES*Settings.NUM_TILES)) {
+                inputs.add(-1.0); 
             } else {
-                inputs.add(0.0);
+                inputs.add(species.world.tiles.get(index).getEvaluation());
             }
         }
-        inputs.add(tile.getEvaluation());
-        inputs.add(brain.inherited_value);
         inputs.add(random(1));
         inputs.add(1.0);
-        int _outLayer = brain.neurons.size()-1;
-        int _memoryNeuron = brain.neurons.get(_outLayer).size()-1;
-        inputs.add((brain.neurons.get(_outLayer).get(_memoryNeuron)));
         
-        brain.process(inputs);
-        ArrayList<Float> results = brain.neurons.get(brain.neurons.size()-1);
+        ArrayList<Float> results = brain.process(inputs);
         float x = results.get(0);
         float y = results.get(1);
+        float z = results.get(2);
         
-        float limit = 0.0005;
-        if (abs(x) > limit || abs(y) > limit) {
+        if (z < 0) {
             tryMove(x,y);
-            return;
         } else {
             hasNotMoved++;
             tryReproduce();
@@ -104,7 +89,6 @@ class Creature {
                  mutateColor(this);
                  hasNotMoved = 0;
             }
-            return;
         }
     }
     
@@ -161,8 +145,8 @@ class Creature {
         if (openSpot == null) return;
                 
         Creature newCreature = new Creature(species);
-          newCreature.brain.copyBrain(brain);
-          newCreature.brain.multipleMutate();
+          newCreature.brain = new Brain(brain);
+          newCreature.brain.mutate();
           newCreature.tile = openSpot;
           newCreature.tile.creature = newCreature;
           newCreature.mutateColor(this);     

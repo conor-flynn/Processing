@@ -59,44 +59,44 @@
         
         void postDraw() {
             drawSpeciesInfo();
-            drawSelectedCreature();
+            //drawSelectedCreature();
         }
         
         void drawSelectedCreature() {
-            if (creature == null) {
-                return; 
-            }
-            if (creature.markedForDeath) {
-                println("Creature leaving scope.");
-                creature = null;
-                return;
-            }
+            //if (creature == null) {
+            //    return; 
+            //}
+            //if (creature.markedForDeath) {
+            //    println("Creature leaving scope.");
+            //    creature = null;
+            //    return;
+            //}
             
             
-            ArrayList<ArrayList<Float>> neurons = creature.brain.neurons;
-            ArrayList<ArrayList<ArrayList<Float>>> axons = creature.brain.axons;
+            //ArrayList<ArrayList<Float>> neurons = creature.brain.neurons;
+            //ArrayList<ArrayList<ArrayList<Float>>> axons = creature.brain.axons;
             
-            fill(255);
-            textFont(font, 32);
-            scale(1,-1);
-            float x = -200;
-            float y = 0;
-            float y_delta = -35;
+            //fill(255);
+            //textFont(font, 32);
+            //scale(1,-1);
+            //float x = -200;
+            //float y = 0;
+            //float y_delta = -35;
             
-            for (int layer = 0; layer < neurons.size(); layer++) {
-                ArrayList<Float> neuronLayer = neurons.get(layer);
+            //for (int layer = 0; layer < neurons.size(); layer++) {
+            //    ArrayList<Float> neuronLayer = neurons.get(layer);
                 
-                y = (-Settings.WORLD_WIDTH/2) - (y_delta * (neuronLayer.size()/2));
-                for (int neuron = 0; neuron < neuronLayer.size(); neuron++) {
-                     float val = neuronLayer.get(neuron);
-                     //val *= 10;
-                     //val = (int)val;
-                     //val /= 10;
-                     text(val, x, y);
-                     y += y_delta;
-                }
-                x -= 200;
-            }
+            //    y = (-Settings.WORLD_WIDTH/2) - (y_delta * (neuronLayer.size()/2));
+            //    for (int neuron = 0; neuron < neuronLayer.size(); neuron++) {
+            //         float val = neuronLayer.get(neuron);
+            //         //val *= 10;
+            //         //val = (int)val;
+            //         //val /= 10;
+            //         text(val, x, y);
+            //         y += y_delta;
+            //    }
+            //    x -= 200;
+            //}
         }
         
         void drawSpeciesInfo() {
