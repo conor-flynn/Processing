@@ -6,16 +6,18 @@ class Species {
     ArrayList<Creature> preGrave = new ArrayList<Creature>();
     ArrayList<Integer> creatureSpawns = new ArrayList<Integer>();
     
-    ArrayList<BrainInput> default_brain_inputs = new ArrayList<BrainInput>();
+    ArrayList<WorldConnection> default_brain_inputs = new ArrayList<WorldConnection>();
+    Integer default_brain_additional_inputs;
     Integer default_brain_memory;
     Integer default_brain_outputs;
     
-    public Species(World world, int numCreatures, ArrayList<Integer> creatureSpawns, ArrayList<BrainInput> default_brain_inputs, Integer default_brain_memory, Integer default_brain_outputs) {  
+    public Species(World world, int numCreatures, ArrayList<Integer> creatureSpawns, ArrayList<WorldConnection> default_brain_inputs, Integer default_brain_additional_inputs, Integer default_brain_memory, Integer default_brain_outputs) {  
         this.world = world;
         this.numCreatures = numCreatures;
         this.creatureSpawns = new ArrayList<Integer>(creatureSpawns);
         
         this.default_brain_inputs = default_brain_inputs;
+        this.default_brain_additional_inputs = default_brain_additional_inputs;
         this.default_brain_memory = default_brain_memory;
         this.default_brain_outputs = default_brain_outputs;
         
@@ -35,7 +37,7 @@ class Species {
         if (creature == null) return;
         
         tile.creature = creature;
-        creature.brain = new Brain(this.default_brain_inputs, this.default_brain_memory, this.default_brain_outputs);
+        //creature.brain = new Brain(this.default_brain_inputs, this.default_brain_additional_inputs, this.default_brain_memory, this.default_brain_outputs);
         creature.tile = tile;
         creature.red = random(255);
         creature.green = random(255);

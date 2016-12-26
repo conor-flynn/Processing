@@ -1,184 +1,113 @@
 import java.util.Map;
 
-class BrainInput {
-    int x, y; 
-    
-    public BrainInput(int x, int y) {
-        this.x = x;
-        this.y = y;
-    }
-    public boolean equals(Object o) {
-        if (o instanceof BrainInput) {
-            BrainInput target = (BrainInput)o;
-            return (x == target.x && y == target.y);
-        }
-        return false;
-    }
-    BrainInput getCopy() {
-        BrainInput result = new BrainInput(x,y);
-        return result;
-    }
-}
-
 class Brain {
   
-    ArrayList<BrainInput> brain_inputs;
+    ArrayList<WorldInputNeuron> input_neurons = new ArrayList<WorldInputNeuron>();
+    ArrayList<AdditionalInputNeuron> additional_input_neurons = new ArrayList<AdditionalInputNeuron>();
+    ArrayList<ProcessNeuron> neurons = new ArrayList<ProcessNeuron>();
+    ArrayList<OutputMemoryNeuron> output_memory_neurons = new ArrayList<OutputMemoryNeuron>();
+    Creature creature;
   
-    HashMap<Integer, HashMap<Integer, Float>> genes;
-    HashMap<Integer, Float> neurons;
-    HashMap<Integer, Integer> signals_sent;
-    HashMap<Integer, ArrayList<Integer>> in_coming;  // For a source NodeID, what comes into it
-    HashMap<Integer, ArrayList<Integer>> out_going;  // For a source NodeID, what does it connect to
-    ArrayList<Integer> output_neurons;
-    
-    int num_original_inputs, num_additional_inputs, num_memory, num_outputs;
-    
-    public void __check() {
-      
-        println("-----------------");
-        println(brain_inputs.size());
-        println(genes.size());
-        println(signals_sent.size());
-        println(in_coming.size());
-        println(out_going.size());
-        println(output_neurons.size());
-        println("-----------------");
-    }
-  
-    public Brain(ArrayList<BrainInput> default_inputs, int _num_memory, int _num_outputs) {
-      
-        this.num_inputs = default_inputs.size();
-        this.num_outputs = _num_outputs;
-        this.num_memory = _num_memory;
-      
-        brain_inputs = new ArrayList<BrainInput>();
-        for (BrainInput target : default_inputs) {
-            brain_inputs.add(target.getCopy()); 
+    Brain(Creature creature, ArrayList<WorldConnection> inputs, int num_additional_inputs, int num_memories, int num_outputs) {
+        this.creature = creature;
+        for (WorldConnection connection : inputs) {
+            buildInput(connection); 
         }
-        int num_neurons = num_inputs + num_outputs;
-        neurons = new HashMap<Integer, Float>();
-        signals_sent = new HashMap<Integer, Integer>();
-        in_coming = new HashMap<Integer, ArrayList<Integer>>();
-        out_going = new HashMap<Integer, ArrayList<Integer>>();
-        for (int i = 0; i < num_neurons; i++) {
-            neurons.put(i, 0.0);
-            signals_sent.put(i, 0);
-            in_coming.put(i, new ArrayList<Integer>());
-            out_going.put(i, new ArrayList<Integer>());
+        for (int i = 0; i < num_additional_inputs; i++) {
+            buildAdditionalInput(i); 
         }
-        genes = new HashMap<Integer, HashMap<Integer, Float>>();
-        for (int i = 0; i < num_inputs; i++) {
-            genes.put(i, new HashMap<Integer, Float>());
-            for (int j = num_inputs; j < num_neurons; j++) {
-                out_going.get(i).add(j); 
-                genes.get(i).put(j, getRandomInitialWeight());
-            }
-        }   
-        output_neurons = new ArrayList<Integer>();
-        for (int i = num_inputs; i < num_neurons; i++) {
-            output_neurons.add(i); 
+        for (int i = 0; i < num_memories; i++) {
+            buildMemory(); 
         }
-        
-        //__check();
+        for (int i = 0; i < num_outputs; i++) {
+            buildOutput(); 
+        }
     }
     
-    public Brain(Brain source) {
-      
-        this.num_inputs = source.num_inputs;
-        this.num_memory = source.num_memory;
-        this.num_outputs = source.num_outputs;
+    void buildInput(WorldConnection connection) {
+        WorldInputNeuron neuron = new WorldInputNeuron();
+        neuron.connection = connection;
         
-        brain_inputs = new ArrayList<BrainInput>();
-        for (BrainInput target : source.brain_inputs) {
-            brain_inputs.add(target.getCopy()); 
+        input_neurons.add(neuron);
+    }
+    void buildAdditionalInput(int index) {
+        AdditionalInputNeuron neuron = new AdditionalInputNeuron();
+        neuron.input_index = index;
+        
+        additional_input_neurons.add(neuron);
+    }
+    void buildMemory() {
+        InputMemoryNeuron input = new InputMemoryNeuron();
+        OutputMemoryNeuron output = new OutputMemoryNeuron();
+        output.input = input;
+        
+        neurons.add(input);
+        neurons.add(output);
+        output_memory_neurons.add(output);
+    }
+    void buildOutput() {
+        OutputNeuron output = new OutputNeuron();
+        
+        neurons.add(output);
+    }
+    void process() {
+        // Reload memory
+        for (OutputMemoryNeuron neuron : output_memory_neurons) {
+            neuron.input.hold = neuron.hold;
+            neuron.hold = 0;
         }
-        genes = new HashMap<Integer, HashMap<Integer, Float>>();
-        for (Map.Entry me : source.genes.entrySet()) {
-            Integer neuronID = (Integer)me.getKey();
-            genes.put(neuronID, new HashMap<Integer, Float>());
-            
-            HashMap<Integer, Float> connections = (HashMap<Integer,Float>)me.getValue();
-            for (Map.Entry other : connections.entrySet()) {
-                Integer otherID = (Integer)other.getKey();
-                Float otherValue = (Float)other.getValue();
-                genes.get(neuronID).put(otherID, otherValue);
+        // Send off all standard inputs
+        for (WorldInputNeuron neuron : input_neurons) {
+            neuron.hold = loadFromWorld(neuron.connection);
+            send(neuron);
+        }
+        // Send of all additional inputs
+        for (AdditionalInputNeuron neuron : additional_input_neurons) {
+            switch (neuron.input_index) {
+                case 0:
+                    neuron.hold = 1;
+                    break;
+                case 1:
+                    neuron.hold = random(2)-1;
+                    break;
+                default:
+                    println("Illegal input_index for additional_input_neurons");
+                    break;
             }
+            send(neuron);
         }
-        neurons = new HashMap<Integer, Float>();
-        for (Map.Entry me : source.neurons.entrySet()) {
-            Integer neuronID = (Integer)me.getKey();
-            Float neuronValue = (Float)me.getValue();
-            neurons.put(neuronID, neuronValue);
+        for (OutputMemoryNeuron neuron : output_memory_neurons) {
+            send(neuron.input); 
         }
-        signals_sent = new HashMap<Integer, Integer>();
-        for (Map.Entry me : source.signals_sent.entrySet()) {
-            Integer neuronID = (Integer)me.getKey();
-            signals_sent.put(neuronID, 0);
+    }
+    void send(BaseNeuron neuron) {
+        float value = neuron.hold;
+        
+        if (!(neuron instanceof OutputMemoryNeuron)) {
+            neuron.hold = 0;
         }
-        in_coming = new HashMap<Integer, ArrayList<Integer>>();
-        for (Map.Entry me : source.in_coming.entrySet()) {
-            Integer neuronID = (Integer)me.getKey();
-            ArrayList<Integer> links = (ArrayList<Integer>)me.getValue();
-            in_coming.put(neuronID, new ArrayList<Integer>());
-            for (Integer i : links) {
-                 in_coming.get(neuronID).add(i);
-            }
-        }
-        out_going = new HashMap<Integer, ArrayList<Integer>>();
-        for (Map.Entry me : source.out_going.entrySet()) {
-            Integer neuronID = (Integer)me.getKey();
-            ArrayList<Integer> links = (ArrayList<Integer>)me.getValue();
-            out_going.put(neuronID, new ArrayList<Integer>());
-            for (Integer i : links) {
-                out_going.get(neuronID).add(i); 
-            }
-        }
-        output_neurons = new ArrayList<Integer>();
-        for (Integer i : source.output_neurons) {
-            output_neurons.add(i); 
+        if (neuron instanceof ProcessNeuron) {
+            ((ProcessNeuron) neuron).current_dependencies = 0; 
         }
         
-        //__check();
-    }
-    
-    float getRandomInitialWeight() {
-        return (random(2) - 1); 
-    }
-  
-    ArrayList<Float> process(ArrayList<Float> inputs) {
-        for (int i = 0; i < neurons.size(); i++) {
-            if (i < (num_inputs + num_memory)) {
-                neurons.put(i, inputs.get(i)); 
-            } else {
-                neurons.put(i, 0.0); 
-            }
-            signals_sent.put(i, 0);
-        }
-        for (int i = 0; i < (num_inputs + num_memory); i++) {
-            send(i);
-        }
-        ArrayList<Float> outputs = new ArrayList<Float>();
-        for (Integer output_neuron : output_neurons) {
-            outputs.add(neurons.get(output_neuron));
-        }
-        return outputs;
-    }
-    void send(Integer source) {
-      
-        float value = neurons.get(source);
-        ArrayList<Integer> targets = out_going.get(source);
-        HashMap<Integer, Float> target_weights = genes.get(source);
-        
-        for (Integer target : targets) {
-            float weight = target_weights.get(target);
-            float send_value = (value * weight);
-            neurons.put(target, neurons.get(target) + send_value);
-            
-            signals_sent.put(target, signals_sent.get(target)+1);
-            if (signals_sent.get(target) == in_coming.get(target).size()) {
-                send(target); 
+        for (BrainConnection connection : neuron.links) {
+            if (!connection.enabled) continue;
+            float send_value = value * connection.weight;
+            connection.target.hold += send_value;
+            connection.target.current_dependencies++;
+            if (connection.target.current_dependencies == connection.target.total_dependencies) {
+                send(connection.target); 
             }
         }
+    }
+    float loadFromWorld(WorldConnection connection) {
+        int index = creature.tile.worldIndex;
+        index += (connection.x + Settings.NUM_TILES * connection.y);
+        if (index < 0 || index >= (Settings.NUM_TILES * Settings.NUM_TILES)) { 
+            return -1;
+        } else {
+            return creature.species.world.tiles.get(index).getEvaluation(); 
+        }        
     }
     float sig(float input) {
         float denom = 1 + exp(-input);
@@ -190,23 +119,37 @@ class Brain {
        val *= 2;
        return val-1;
     }
-    void mutate() {
-         Integer num_outputs = output_neurons.size();
-         Integer num_inputs = neurons.size() - num_outputs;
-         
-         
-         Object[] gene_choices = genes.keySet().toArray();
-         
-         Integer gene_index_choice = int(random(gene_choices.length));
-         
-         Integer gene = (Integer)gene_choices[gene_index_choice];
-         Object[] choices = genes.get(gene).keySet().toArray();
-         Integer choice_index = int(random(choices.length));
-         
-         Integer choice = (Integer)choices[choice_index];
-         
-         Float value = genes.get(gene).get(choice);
-         value += (random(0.2) - 0.1);
-         genes.get(gene).put(choice, value);
-    }
+}
+
+class WorldConnection {
+    int x, y = 0;
+}
+class BrainConnection {
+    ProcessNeuron target = new ProcessNeuron();
+    float weight = 0.0;
+    boolean enabled = true;
+}
+
+class BaseNeuron {
+    ArrayList<BrainConnection> links = new ArrayList<BrainConnection>();
+    float hold = 0.0;
+}
+class ProcessNeuron extends BaseNeuron {
+    int total_dependencies;
+    int current_dependencies;
+}
+class WorldInputNeuron extends BaseNeuron {
+    WorldConnection connection;
+}
+class AdditionalInputNeuron extends BaseNeuron {
+    int input_index = -1; 
+}
+class InputMemoryNeuron extends ProcessNeuron {
+
+}
+class OutputMemoryNeuron extends ProcessNeuron {
+    InputMemoryNeuron input;
+}
+class OutputNeuron extends ProcessNeuron {
+
 }
