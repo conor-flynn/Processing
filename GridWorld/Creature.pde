@@ -62,34 +62,23 @@ class Creature {
             return;
         }
         
-        //ArrayList<Float> inputs = new ArrayList<Float>();
-        //for (BrainInput input : brain.brain_inputs) {
-        //    int index = tile.worldIndex + (input.x + (Settings.NUM_TILES * input.y));
-        //    if (index < 0 || index >= (Settings.NUM_TILES*Settings.NUM_TILES)) {
-        //        inputs.add(-1.0); 
-        //    } else {
-        //        inputs.add(species.world.tiles.get(index).getEvaluation());
-        //    }
-        //}
-        //inputs.add(random(1));
-        //inputs.add(1.0);
         
-        //ArrayList<Float> results = brain.process(inputs);
-        //float x = results.get(0);
-        //float y = results.get(1);
-        //float z = results.get(2);
+        ArrayList<Float> results = brain.process();
+        float x = results.get(0);
+        float y = results.get(1);
+        float z = results.get(2);
         
-        //if (z < 0) {
-        //    tryMove(x,y);
-        //} else {
-        //    hasNotMoved++;
-        //    tryReproduce();
-        //    if (hasNotMoved > Settings.CREATURE_STALL_MUTATION_LIMIT) {
-        //         brain.mutate();
-        //         mutateColor(this);
-        //         hasNotMoved = 0;
-        //    }
-        //}
+        if (z < 0) {
+            tryMove(x,y);
+        } else {
+            hasNotMoved++;
+            tryReproduce();
+            if (hasNotMoved > Settings.CREATURE_STALL_MUTATION_LIMIT) {
+                 brain.mutate();
+                 mutateColor(this);
+                 hasNotMoved = 0;
+            }
+        }
     }
     
     float roundAway(float val) {
@@ -145,7 +134,7 @@ class Creature {
         if (openSpot == null) return;
                 
         Creature newCreature = new Creature(species);
-          //newCreature.brain = new Brain(brain);
+          newCreature.brain = new Brain(brain);
           //newCreature.brain.mutate();
           newCreature.tile = openSpot;
           newCreature.tile.creature = newCreature;

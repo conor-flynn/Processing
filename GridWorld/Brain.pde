@@ -2,109 +2,34 @@ import java.util.Map;
 
 class Brain {
   
-    ArrayList<WorldInputNeuron> input_neurons = new ArrayList<WorldInputNeuron>();
-    ArrayList<AdditionalInputNeuron> additional_input_neurons = new ArrayList<AdditionalInputNeuron>();
-    ArrayList<ProcessNeuron> neurons = new ArrayList<ProcessNeuron>();
-    ArrayList<OutputMemoryNeuron> output_memory_neurons = new ArrayList<OutputMemoryNeuron>();
-    ArrayList<BaseNeuron> aggregate = new ArrayList<BaseNeuron>();
     Creature creature;
   
     Brain(Creature creature, ArrayList<WorldConnection> inputs, int num_memories, int num_outputs) {
         this.creature = creature;
-        for (WorldConnection connection : inputs) {
-            buildInput(connection); 
-        }
-        for (int i = 0; i < 2; i++) {
-            buildAdditionalInput(i); 
-        }
-        for (int i = 0; i < num_memories; i++) {
-            buildMemory(); 
-        }
-        for (int i = 0; i < num_outputs; i++) {
-            buildOutput(); 
-        }
+        
+    }
+    Brain(Brain source) {
+         
     }
     
     void buildInput(WorldConnection connection) {
-        WorldInputNeuron neuron = new WorldInputNeuron();
-        neuron.connection = connection;
         
-        input_neurons.add(neuron);
-        aggregate.add(neuron);
     }
     void buildAdditionalInput(int index) {
-        AdditionalInputNeuron neuron = new AdditionalInputNeuron();
-        neuron.input_index = index;
         
-        additional_input_neurons.add(neuron);
-        aggregate.add(neuron);
     }
     void buildMemory() {
-        InputMemoryNeuron input = new InputMemoryNeuron();
-        OutputMemoryNeuron output = new OutputMemoryNeuron();
-        output.input = input;
         
-        neurons.add(input);
-        neurons.add(output);
-        output_memory_neurons.add(output);
-        aggregate.add(input);
-        aggregate.add(output);
     }
     void buildOutput() {
-        OutputNeuron output = new OutputNeuron();
         
-        neurons.add(output);
-        aggregate.add(output);
     }
-    void process() {
-        // Reload memory
-        for (OutputMemoryNeuron neuron : output_memory_neurons) {
-            neuron.input.hold = neuron.hold;
-            neuron.hold = 0;
-        }
-        // Send off all standard inputs
-        for (WorldInputNeuron neuron : input_neurons) {
-            neuron.hold = loadFromWorld(neuron.connection);
-            send(neuron);
-        }
-        // Send of all additional inputs
-        for (AdditionalInputNeuron neuron : additional_input_neurons) {
-            switch (neuron.input_index) {
-                case 0:
-                    neuron.hold = 1;
-                    break;
-                case 1:
-                    neuron.hold = random(2)-1;
-                    break;
-                default:
-                    println("Illegal input_index for additional_input_neurons");
-                    break;
-            }
-            send(neuron);
-        }
-        for (OutputMemoryNeuron neuron : output_memory_neurons) {
-            send(neuron.input); 
-        }
+    ArrayList<Float> process() {
+        ArrayList<Float> results = new ArrayList<Float>();
+        return results;
     }
     void send(BaseNeuron neuron) {
-        float value = neuron.hold;
         
-        if (!(neuron instanceof OutputMemoryNeuron)) {
-            neuron.hold = 0;
-        }
-        if (neuron instanceof ProcessNeuron) {
-            ((ProcessNeuron) neuron).current_dependencies = 0; 
-        }
-        
-        for (BrainConnection connection : neuron.links) {
-            if (!connection.enabled) continue;
-            float send_value = value * connection.weight;
-            connection.target.hold += send_value;
-            connection.target.current_dependencies++;
-            if (connection.target.current_dependencies == connection.target.total_dependencies) {
-                send(connection.target); 
-            }
-        }
     }
     float loadFromWorld(WorldConnection connection) {
         int index = creature.tile.worldIndex;
@@ -115,71 +40,42 @@ class Brain {
             return creature.species.world.tiles.get(index).getEvaluation(); 
         }        
     }
+    boolean invalidConnection(BaseNeuron source, BaseNeuron target) {
+        if (source == target) return true;
+        if (target instanceof WorldInputNeuron) return true;
+        if (target instanceof InputMemoryNeuron) return true;
+        if (target instanceof AdditionalInputNeuron) return true;
+        
+        for (BrainConnection connection : target.links) {
+            if (invalidConnection(source, connection.target)) {
+                return true; 
+            }
+        }
+        return false;
+    }
     void mutate() {
-        changeConnection();
+        
     }
     void enableConnection() {
-      
+        
     }
     void disableConnection() {
-      
+        
     }
     void addConnection() {
-        int index = (int)Math.floor(random(aggregate.size()));
-        BaseNeuron source = aggregate.get(index);
+        
     }
     void removeConnection() {
-      
+        
     }
     void changeConnection() {
-        int index = (int)Math.floor(random(aggregate.size()));
-        BaseNeuron source = aggregate.get(index);
         
-        if (source.links.size() == 0) {
-            return; 
-        } else {
-            index = (int)Math.floor(random(source.links.size()));
-            BrainConnection connection = source.links.get(index);
-            connection.weight += (random(0.24) - 0.12);
-        }
     }
     void addInput() {
-        int low_x = 0, low_y = 0, high_x = 0, high_y = 0;
-        for (WorldInputNeuron neuron : input_neurons) {
-            int x = neuron.connection.x;
-            int y = neuron.connection.y;
-            
-            if (x < low_x) low_x = x;
-            if (x > high_x) high_x = x;
-            if (y < low_y) low_y = y;
-            if (y > high_y) high_y = y;
-        }
-        int x_range = high_x - low_x;
-        int y_range = high_y - low_y;
         
-        x_range += 2;
-        y_range += 2;
-        
-        while(true) {
-             int new_x = (int)(random(x_range) - low_x - 1);
-             int new_y = (int)(random(y_range) - low_y - 1);
-             
-             boolean foundSimilar = false;
-             for (WorldInputNeuron neuron : input_neurons) {
-                 if (neuron.connection.x == new_x && neuron.connection.y == new_y) {
-                     foundSimilar = true;
-                     break;
-                 }
-             }
-             if (foundSimilar) {
-                 continue; 
-             } else {
-                 buildInput(new WorldConnection(new_x, new_y));
-             }
-        }
     }
     void removeInput() {
-      
+        
     }
     float sig(float input) {
         float denom = 1 + exp(-input);
@@ -206,26 +102,76 @@ class BrainConnection {
     boolean enabled = true;
 }
 
-class BaseNeuron {
-    ArrayList<BrainConnection> links = new ArrayList<BrainConnection>();
-    float hold = 0.0;
-}
-class ProcessNeuron extends BaseNeuron {
-    int total_dependencies;
-    int current_dependencies;
-}
-class WorldInputNeuron extends BaseNeuron {
-    WorldConnection connection;
-}
-class AdditionalInputNeuron extends BaseNeuron {
-    int input_index = -1; 
-}
-class InputMemoryNeuron extends ProcessNeuron {
 
-}
-class OutputMemoryNeuron extends ProcessNeuron {
-    InputMemoryNeuron input;
-}
-class OutputNeuron extends ProcessNeuron {
 
+class Neuron {
+    int index;
+    float value;
+    int total_connections;
+    int current_connections;
+}
+class Physiology {
+    ArrayList<Neuron> neurons;
+}
+class Geniology {
+    HashMap<Integer, HashMap<Integer, Float>> genes; 
+}
+class WorldInput {
+    HashMap<Integer, WorldConnection> links;
+}
+class OtherInput {
+    HashMap<Integer, Integer> other_links; 
+}
+class Memory {
+    HashMap<Integer, Integer> memories; 
+}
+class WorldOutput {
+    ArrayList<Integer> outputs; 
+}
+void addInput(WorldConnection connection) {
+    int neuron_id = buildNeuron();
+    links.put(neuron_id, connection);
+}
+void addMemory() {
+    int first = buildNeuron();
+    int second = buildNeuron();
+    memories.put(first, second);
+}
+void addOutput() {
+    int index = buildNeuron();
+    outputs.add(index);
+}
+void addConnection() {
+    while (true) {
+         int first = (int)(random(neurons.size()));
+         int second = (int)(random(neurons.size()));
+         
+         if (invalidConnection(first, second)) {
+             continue; 
+         } else {
+              genes.get(first).put(second, random(0.24) - 0.12);
+              return;
+         }         
+    }
+}
+boolean invalidConnection(int first, int second) {
+  
+    if (first == second) return true;
+    if (links.contains(second)) return true;
+    if (memories.contains(second) && memories.get(second) == first) return true;
+    if (other_links.contains(second)) return true;
+    
+    HashMap<Integer, Float> connections = genes.get(first);
+    for (Map.Entry me : connections.entrySet()) {
+        if (invalidConnection(first, (Integer)me.getValue())) {
+            return true;
+        }
+    }
+    return false;
+}
+int buildNeuron() {
+    Neuron neuron = new Neuron();
+    int index = neurons.size();
+    neurons.put(index, neuron);
+    return index;
 }
