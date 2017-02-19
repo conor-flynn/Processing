@@ -20,7 +20,7 @@
              static final float BIOME_BLUR_RATE = 0.2;
          
          // Evolution settings
-             static final int NUM_SPECIES = 5;
+             static final int NUM_SPECIES = 1;
              static final int NUM_CREATURES_PER_SPECIES = 1;
              
              static final float REPRODUCTION_EFFICIENCY = 1.0; // How much energy gets passed to the child. 0.3 means 70% of the energy is lost.

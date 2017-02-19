@@ -63,11 +63,17 @@ class Creature {
         }
         
         
-        ArrayList<Float> results = brain.process();
+        brain.process();
+        ArrayList<Float> results = brain.process_results;
+        if (results.size() != 3) {
+        	return;   
+        }
         float x = results.get(0);
         float y = results.get(1);
         float z = results.get(2);
         
+        tryMove(x,y);
+        /*
         if (z < 0) {
             tryMove(x,y);
         } else {
@@ -79,6 +85,7 @@ class Creature {
                  hasNotMoved = 0;
             }
         }
+        */
     }
     
     float roundAway(float val) {
@@ -127,7 +134,11 @@ class Creature {
         blue = clamp(blue, 0, 255);
     }
     
-    void tryReproduce() {        
+    void tryReproduce() {  
+        return;
+        
+        /*
+        
         float cost = life * Settings.CREATURE_CHILD_SACRIFICE_AMOUNT;
       
         Tile openSpot = findReproductionTile();
@@ -148,6 +159,8 @@ class Creature {
             killCreature();
             return;
         }
+        
+        */
     }
     
     void tryMove(float x, float y) {
@@ -191,6 +204,7 @@ class Creature {
                    this.life -= (tile.biome.movement_resistance);                   
                    tile = target;
                    tile.creature = this;  
+                   tile.shouldRedraw = true;
                } else {
                    if (target.creature.markedForDeath) return;
                    if (target.creature.life <= 0) return;
