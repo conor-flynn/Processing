@@ -71,6 +71,7 @@ class Creature {
         float x = results.get(0);
         float y = results.get(1);
         float z = results.get(2);
+        // TODO : If z is 0, then the creature shouldn't reproduce. It shou
         
         tryMove(x,y);
         /*

@@ -7,12 +7,12 @@ class Brain {
     ArrayList<Input> world_inputs = new ArrayList<Input>();
     HashMap<Integer, Neuron> worker_neurons = new HashMap<Integer, Neuron>();
     HashMap<Integer, Neuron> output_neurons = new HashMap<Integer, Neuron>();
+    int neuron_id_count = 0;
     Neuron constant_neuron;
     Neuron random_neuron;
     
     Brain(Creature creature) {
         this.creature = creature;
-        
         // Output setup
         {
             output_neurons.put(0, new Neuron(0));
@@ -27,8 +27,8 @@ class Brain {
         worker_neurons.put(4, new Neuron(4));
         worker_neurons.put(5, new Neuron(5));
         
-        constant_neuron = new Neuron(6);
-        random_neuron = new Neuron(7);
+        constant_neuron = new Neuron(-2);
+        random_neuron = new Neuron(-2);
         
         // Connect middle-neurons to output-neurons
         {
@@ -58,50 +58,163 @@ class Brain {
             connect(random_neuron, 4);
             connect(random_neuron, 5);
         }
-        
-        for (int i = 0; i < 9; i++) {
+        neuron_id_count = 6;
+        for (int i = 0; i < 20; i++) {
             add_new_input();   
         }
+        for (int i = 0; i < 1000; i++) {
+            add_new_connection_from_any_input();
+        }
+        for (int i = 0; i < 1000; i++) {
+            bisect_connection();   
+        }
+    }
+    Neuron get_random_worker_neuron() {
+        Neuron selection = null;
+        int _index = ((int)random(0, worker_neurons.size()));
+        for (Map.Entry me : worker_neurons.entrySet()) {
+            if (_index == 0) {
+                selection = ((Neuron)me.getValue());
+                break;
+            }
+            _index--;
+        }
+        assert(selection != null);
+        return selection;
+    }
+    Axon get_random_axon_from_neuron(Neuron worker) {
+        if (worker.neuron_connections.size() == 0) return null;
+        int _index = ((int)random(0, worker.neuron_connections.size()));
+        Axon result = worker.neuron_connections.get(_index);
+        assert(result != null);
+        return result;
+    }
+    Neuron get_middle_or_end_neuron(int neuron_id) {
+        Neuron result = worker_neurons.get(neuron_id);
+        if (result != null) return result;
+        result = output_neurons.get(neuron_id);
+        assert(result != null);
+        return result;
+    }
+    void bisect_connection() {
+        Neuron source_neuron = get_random_worker_neuron();
+        if (source_neuron.neuron_connections.size() == 0) return;
+        Axon original_axon = get_random_axon_from_neuron(source_neuron);
+        assert(original_axon != null);
+        
+        
+        Neuron end_neuron = get_middle_or_end_neuron(original_axon.target_id);        
+        Neuron middle_neuron = new Neuron(neuron_id_count++);
+        
+        Axon empty_axon = new Axon();
+        empty_axon.source_id = middle_neuron.neuron_id;
+        empty_axon.target_id = end_neuron.neuron_id;
+        empty_axon.weight = 1;
+        
+        original_axon.target_id = middle_neuron.neuron_id;
+        
+        middle_neuron.neuron_connections.add(empty_axon);
+        middle_neuron.static_connections_count++;
+        
+        worker_neurons.put(middle_neuron.neuron_id, middle_neuron);
+    }
+    void add_new_connection_from_any_input() {
+        int choice_size = world_inputs.size() + 2;
+        int choice = ((int)random(0, choice_size));
+        if (choice < world_inputs.size()) {
+            add_new_connection_from_world_input();
+        } else {
+            add_new_connection_from_special_input();
+        }
+    }
+    void add_new_connection_from_special_input() {
+        Neuron current = null;
+        int _choice = ((int)random(0,2));
+        if (_choice == 0) {
+            current = constant_neuron;   
+        } else {
+            current = random_neuron;
+        }
+        assert(current != null);
+        
+        ArrayList<Integer> current_connections = new ArrayList<Integer>();
+        for (Axon axon : current.neuron_connections) {
+            current_connections.add(axon.target_id);   
+        }
+        assert(current_connections.size() > 0);
+        
+        if (current_connections.size() == worker_neurons.size()) {
+            return;
+        }
+        ArrayList<Integer> possible_connections = new ArrayList<Integer>();
+        for (Map.Entry me : worker_neurons.entrySet()) {
+            int possible_neuron_id = ((Neuron)me.getValue()).neuron_id;
+            if (current_connections.contains(possible_neuron_id)) {
+                continue;
+            } else {
+                possible_connections.add(possible_neuron_id);
+            }   
+        }
+        if (possible_connections.size() == 0) return;
+        
+        int choice_index = ((int)random(0, possible_connections.size()));
+        int choice = possible_connections.get(choice_index);    // choice == neuron_id
+        
+        Axon new_axon = new Axon();
+        new_axon.target_id = choice;
+        new_axon.weight = random(-1f, 1f);
+        
+        Neuron target = worker_neurons.get(choice);
+        assert( target != null );
+        target.static_connections_count++;
+    }
+    void add_new_connection_from_world_input() {
+        
+        assert(world_inputs.size() > 0);
+        
+        int iteration = ((int)random(0, world_inputs.size()));
+        Input selection = null;
         for (Input input : world_inputs) {
-            WorldConnection connection = input.connection;
-            println("(" + connection.x + " , " + connection.y + ")");
+            if (iteration == 0) {
+                selection = input;
+                break;
+            }
+            iteration--;
         }
+        assert(selection != null);
         
-        /*
-        ArrayList<WorldConnection> base_connections = new ArrayList<WorldConnection>();
-        {
-            base_connections.add(new WorldConnection(-1,  0));
-            base_connections.add(new WorldConnection(+1,  0));
-            
-            base_connections.add(new WorldConnection( 0, +1));
-            base_connections.add(new WorldConnection( 0, -1));
-            
-            base_connections.add(new WorldConnection(-1, -1));
-            base_connections.add(new WorldConnection(+1, +1));
-            
-            base_connections.add(new WorldConnection(-1, +1));
-            base_connections.add(new WorldConnection(+1, -1));
-            
-            base_connections.add(new WorldConnection(0, 0));
+        ArrayList<Integer> current_connections = new ArrayList<Integer>();
+        for (Axon axon : selection.neuron_connections) {
+            current_connections.add(axon.target_id);   
         }
+        assert(current_connections.size() > 0);
         
-        for (WorldConnection connection : base_connections) {
-            
-            Input input = new Input();
-            
-            int offset_a = ((int) random(0,3));    // [0,2]
-            int offset_b = 3;    // First index of worker_neurons
-            int neuron_id = offset_a + offset_b;
-            
-            Neuron target = worker_neurons.get(neuron_id);
-            assert(target != null);
-            target.static_connections_count++;
-            
-            input.neuron_id = neuron_id;
-            input.connection = connection;
-            world_inputs.add(input);
+        if (current_connections.size() == worker_neurons.size()) {
+            return;
         }
-        */
+        ArrayList<Integer> possible_connections = new ArrayList<Integer>();
+        for (Map.Entry me : worker_neurons.entrySet()) {
+            int possible_neuron_id = ((Neuron)me.getValue()).neuron_id;
+            if (current_connections.contains(possible_neuron_id)) {
+                continue;
+            } else {
+                possible_connections.add(possible_neuron_id);
+            }   
+        }
+        if (possible_connections.size() == 0) return;
+        
+        int choice_index = ((int)random(0, possible_connections.size()));
+        int choice = possible_connections.get(choice_index);    // choice == neuron_id
+        
+        Axon new_axon = new Axon();
+        new_axon.target_id = choice;
+        new_axon.weight = random(-1f, 1f);
+        
+        Neuron target = worker_neurons.get(choice);
+        assert( target != null );
+        target.static_connections_count++;
+        
+        selection.neuron_connections.add(new_axon);
     }
     void add_new_input() {
         
