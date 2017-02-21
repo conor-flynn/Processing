@@ -42,37 +42,6 @@ class Brain {
         constant_neuron = new Neuron(-2);
         random_neuron = new Neuron(-2);
         
-        // Connect middle-neurons to output-neurons
-        /*
-        {
-            connect(3, 0);
-            connect(3, 1);
-            connect(3, 2);
-            
-            connect(4, 0);
-            connect(4, 1);
-            connect(4, 2);
-            
-            connect(5, 0);
-            connect(5, 1);
-            connect(5, 2);
-        }
-        
-        // Connect constant to middle-neurons
-        {
-            connect(constant_neuron, 3);
-            connect(constant_neuron, 4);
-            connect(constant_neuron, 5);
-        }
-        
-        // Connect random to middle-neurons
-        {
-            connect(random_neuron, 3);
-            connect(random_neuron, 4);
-            connect(random_neuron, 5);
-        }
-        */
-        
         neuron_id_count = 6;
         for (int i = 0; i < 15; i++) {
             add_new_input();   
@@ -86,6 +55,43 @@ class Brain {
         for (int i = 0; i < 20; i++) {
             add_new_connection_from_middle_neuron_to_middle_neuron_or_output_neuron();
         }
+        for (int i = 0; i < 50; i++) {
+            mutate_any_axon();
+        }
+    }
+    void mutate_any_axon() {
+        // Axons aren't weighted evenly
+        int index = (world_inputs.size()) + (worker_neurons.size());
+        int choice = ((int)random(0, index));
+        if (choice < world_inputs.size()) {
+            mutate_input_axon();
+        } else {
+            mutate_worker_neuron_axon();
+        }
+    }
+    void mutate_input_axon() {
+        
+        assert(world_inputs.size() > 0);
+        Input source = get_random_world_input();
+        assert(source != null);
+        if (source.neuron_connections.size() == 0) return;
+        
+        Axon worker = get_random_axon_from_input(source);
+        assert(worker != null);
+        
+        worker.weight += random(-0.1f, 0.1f);
+    }
+    void mutate_worker_neuron_axon() {
+        assert(worker_neurons.size() > 0);
+        Neuron source = get_random_worker_neuron();
+        assert(source != null);
+        
+        if (source.neuron_connections.size() == 0) return;
+        
+        Axon worker = get_random_axon_from_neuron(source);
+        assert(worker != null);
+        
+        worker.weight += random(-0.1f, 0.1f);
     }
     boolean has_connection(int original_neuron_id, int current_neuron_id) {
         if (original_neuron_id == current_neuron_id) return true;
@@ -130,59 +136,7 @@ class Brain {
         // No recursive connection between source and target
         
         form_connection(source, target);
-    }
-    Neuron get_random_worker_neuron_or_output_neuron() {
-        int index = (worker_neurons.size()) + (output_neurons.size());
-        int choice = ((int)random(0, index));
-        
-        if (choice < worker_neurons.size()) {
-            return get_random_worker_neuron();
-        } else {
-            return get_random_output_neuron();
-        }
-    }
-    Neuron get_random_output_neuron() {
-        assert(output_neurons.size() == 3);
-        Neuron selection = null;
-        int _index = ((int)random(0, output_neurons.size()));
-        for (Map.Entry me : output_neurons.entrySet()) {
-            if (_index == 0) {
-                selection = ((Neuron)me.getValue());
-                break;
-            }
-            _index--;
-        }
-        assert(selection != null);
-        return selection;
-    }
-    Neuron get_random_worker_neuron() {
-        assert(worker_neurons.size() > 0);
-        Neuron selection = null;
-        int _index = ((int)random(0, worker_neurons.size()));
-        for (Map.Entry me : worker_neurons.entrySet()) {
-            if (_index == 0) {
-                selection = ((Neuron)me.getValue());
-                break;
-            }
-            _index--;
-        }
-        assert(selection != null);
-        return selection;
-    }
-    Axon get_random_axon_from_neuron(Neuron worker) {
-        if (worker.neuron_connections.size() == 0) return null;
-        int _index = ((int)random(0, worker.neuron_connections.size()));
-        Axon result = worker.neuron_connections.get(_index);
-        assert(result != null);
-        return result;
-    }
-    Neuron get_middle_or_end_neuron_from_id(int neuron_id) {
-        Neuron result = worker_neurons.get(neuron_id);
-        if (result != null) return result;
-        result = output_neurons.get(neuron_id);
-        assert(result != null);
-        return result;
-    }
+    }    
     void bisect_connection() {
         Neuron source_neuron = get_random_worker_neuron();
         if (source_neuron.neuron_connections.size() == 0) return;
@@ -264,16 +218,7 @@ class Brain {
         
         assert(world_inputs.size() > 0);
         
-        int iteration = ((int)random(0, world_inputs.size()));
-        Input selection = null;
-        for (Input input : world_inputs) {
-            if (iteration == 0) {
-                selection = input;
-                break;
-            }
-            iteration--;
-        }
-        assert(selection != null);        
+        Input selection = get_random_world_input();       
         
         ArrayList<Integer> current_connections = new ArrayList<Integer>();
         for (Axon axon : selection.neuron_connections) {
@@ -348,41 +293,6 @@ class Brain {
             }
         }
     }
-    void __connect(Neuron source, int target_id) {
-        Neuron target = worker_neurons.get(target_id);
-        if (target == null) {
-            target = output_neurons.get(target_id);
-            assert(target != null);
-        }
-        
-        Axon axon = new Axon();
-        axon.source_id = source.neuron_id;
-        axon.target_id = target_id;
-        axon.weight = random(-1f,1f);    // TODO : Does random(-1,1) return an int? Should it be random(-1.0, 1.0)?
-        
-        source.neuron_connections.add(axon);
-        target.static_connections_count++;
-    }
-    void __connect(int source_id, int target_id) {
-        Neuron source = worker_neurons.get(source_id);
-        assert(source != null);
-        
-        Neuron target = worker_neurons.get(target_id);
-        if (target == null) {
-            target = output_neurons.get(target_id);
-            assert(target != null);
-        }
-        
-        Axon axon = new Axon();
-        axon.source_id = source_id;
-        axon.target_id = target_id;
-        axon.weight = random(-1f,1f);    // TODO : Does random(-1,1) return an int? Should it be random(-1.0, 1.0)?
-        
-        
-        source.neuron_connections.add(axon);  
-        target.static_connections_count++;        
-    }
-  
     float evaluate_position(WorldConnection connection) {
         Tile current = creature.tile;
         int current_index = current.worldIndex;
@@ -411,8 +321,7 @@ class Brain {
         int target_index = (target_x) + (target_y * Settings.NUM_TILES);
         //return random(-1f,1f);
         return creature.species.world.tiles.get(target_index).getEvaluation();
-    }
-  
+    }  
     void process() {
         
          assert(creature != null);
@@ -501,6 +410,111 @@ class Brain {
     }
     void mutate() {
         
+    }
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    Input get_random_world_input() {
+        int iteration = ((int)random(0, world_inputs.size()));
+        Input selection = null;
+        for (Input input : world_inputs) {
+            if (iteration == 0) {
+                selection = input;
+                break;
+            }
+            iteration--;
+        }
+        assert(selection != null);
+        return selection;
+    }
+    Axon get_random_axon_from_input(Input source) {
+        int choice = ((int)random(0, source.neuron_connections.size()));
+        for (Axon axon : source.neuron_connections) {
+            if (choice == 0) {
+                return axon;
+            }
+            choice--;
+        }
+        return null;
+    }
+    Neuron get_random_worker_neuron_or_output_neuron() {
+        int index = (worker_neurons.size()) + (output_neurons.size());
+        int choice = ((int)random(0, index));
+        
+        if (choice < worker_neurons.size()) {
+            return get_random_worker_neuron();
+        } else {
+            return get_random_output_neuron();
+        }
+    }
+    Neuron get_random_output_neuron() {
+        assert(output_neurons.size() == 3);
+        Neuron selection = null;
+        int _index = ((int)random(0, output_neurons.size()));
+        for (Map.Entry me : output_neurons.entrySet()) {
+            if (_index == 0) {
+                selection = ((Neuron)me.getValue());
+                break;
+            }
+            _index--;
+        }
+        assert(selection != null);
+        return selection;
+    }
+    Neuron get_random_worker_neuron() {
+        assert(worker_neurons.size() > 0);
+        Neuron selection = null;
+        int _index = ((int)random(0, worker_neurons.size()));
+        for (Map.Entry me : worker_neurons.entrySet()) {
+            if (_index == 0) {
+                selection = ((Neuron)me.getValue());
+                break;
+            }
+            _index--;
+        }
+        assert(selection != null);
+        return selection;
+    }
+    Axon get_random_axon_from_neuron(Neuron worker) {
+        if (worker.neuron_connections.size() == 0) return null;
+        int _index = ((int)random(0, worker.neuron_connections.size()));
+        Axon result = worker.neuron_connections.get(_index);
+        assert(result != null);
+        return result;
+    }
+    Neuron get_middle_or_end_neuron_from_id(int neuron_id) {
+        Neuron result = worker_neurons.get(neuron_id);
+        if (result != null) return result;
+        result = output_neurons.get(neuron_id);
+        assert(result != null);
+        return result;
     }
 }
 
