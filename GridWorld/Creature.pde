@@ -55,7 +55,9 @@ class Creature {
             return;
         }
         
-        this.life -= (this.life * 0.01);
+        float multiplier = (species.creatures.size() / 300);
+        if (multiplier < 1.0f) multiplier = 1f;
+        this.life -= (this.life * 0.01) * (multiplier) * (brain.brain_size_multiplier());
         this.life -= (Settings.CREATURE_MINIMUM_DECAY_AMOUNT + this.tile.biome.movement_resistance);        
         if (life <= 0) {
             killCreature();
@@ -73,20 +75,11 @@ class Creature {
         float z = results.get(2);
         // TODO : If z is 0, then the creature shouldn't reproduce. It shou
         
-        tryMove(x,y);
-        /*
-        if (z < 0) {
-            tryMove(x,y);
-        } else {
-            hasNotMoved++;
-            tryReproduce();
-            if (hasNotMoved > Settings.CREATURE_STALL_MUTATION_LIMIT) {
-                 brain.mutate();
-                 mutateColor(this);
-                 hasNotMoved = 0;
-            }
+        if (abs(x) >= Settings.CREATURE_MINIMUM_MOVEMENT_THRESHOLD || abs(y) >= Settings.CREATURE_MINIMUM_MOVEMENT_THRESHOLD) {
+            tryMove(x,y);   
+        } else if (abs(z) >= Settings.CREATURE_MINIMUM_REPRODUCTIVE_THRESHOLD) {
+            tryReproduce();   
         }
-        */
     }
     
     float roundAway(float val) {
@@ -119,38 +112,39 @@ class Creature {
        if (val > upper) return upper;
        return val;
     }
-    
-    void mutateColor(Creature target) {
+    void copy_color(Creature target) {
+        red = target.red;
+        green = target.green;
+        blue = target.blue;
+    }
+    void mutate_color() {
         float delta = 5;
         float d1 = random(delta) - (delta/2);
         float d2 = random(delta) - (delta/2);
         float d3 = random(delta) - (delta/2);
         
-        red = target.red + d1;
-        green = target.green + d2;
-        blue = target.blue + d3;
+        red   += d1;
+        green += d2;
+        blue  += d3;
         
         red = clamp(red, 0, 255);
         green = clamp(green, 0, 255);
         blue = clamp(blue, 0, 255);
     }
     
-    void tryReproduce() {  
-        return;
-        
-        /*
-        
+    void tryReproduce() {
         float cost = life * Settings.CREATURE_CHILD_SACRIFICE_AMOUNT;
       
         Tile openSpot = findReproductionTile();
         if (openSpot == null) return;
                 
         Creature newCreature = new Creature(species);
-          newCreature.brain = new Brain(brain);
-          //newCreature.brain.mutate();
+          newCreature.brain = new Brain(brain, newCreature);
+          newCreature.copy_color(this);
+          //newCreature.brain.mutate_count(((int)random(2,7)));
+          newCreature.brain.mutate();
           newCreature.tile = openSpot;
-          newCreature.tile.creature = newCreature;
-          newCreature.mutateColor(this);     
+          newCreature.tile.creature = newCreature;     
           newCreature.generation = generation+1;
         species.creatures.add(newCreature);
         
@@ -160,8 +154,6 @@ class Creature {
             killCreature();
             return;
         }
-        
-        */
     }
     
     void tryMove(float x, float y) {

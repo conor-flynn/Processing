@@ -6,6 +6,7 @@
          // Game settings
              static final String WORLD_FILE_NAME = "world4.json";
              static int TARGET_FRAME_RATE = 1000;
+             static float SCREEN_CLEAR_TIMER = 0f;
       
          // World settings
              static int NUM_TILES = -1;
@@ -20,7 +21,7 @@
              static final float BIOME_BLUR_RATE = 0.2;
          
          // Evolution settings
-             static final int NUM_SPECIES = 1;
+             static final int NUM_SPECIES = 5;
              static final int NUM_CREATURES_PER_SPECIES = 20;
              
              static final float REPRODUCTION_EFFICIENCY = 1.0; // How much energy gets passed to the child. 0.3 means 70% of the energy is lost.
@@ -31,4 +32,7 @@
              static final int CREATURE_DEATH_AGE = 1000;
              static final float CREATURE_PLANT_EAT_AMOUNT = 0.1;
              static final float CREATURE_CREATURE_EAT_AMOUNT = 1;
+             
+             static final float CREATURE_MINIMUM_MOVEMENT_THRESHOLD = 0.01f;
+             static final float CREATURE_MINIMUM_REPRODUCTIVE_THRESHOLD = 0.15f;
     }

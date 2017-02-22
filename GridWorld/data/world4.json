@@ -17,7 +17,7 @@
 			{
 				"label"  : "l0",
 				"name" : "Land",
-				"food_spawn_percentage" : 0.05,
+				"food_spawn_percentage" : 0.2,
 				"food_energy_amount" : 1,
 				"food_energy_growth_amount" : 0.025,
 				"movement_resistance" : 0.0,

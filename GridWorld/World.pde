@@ -36,7 +36,9 @@
                     spawn0.add(index);
                 }
             }
-            this.species.add(new Species(this, Settings.NUM_CREATURES_PER_SPECIES, spawn0));
+            for (int i = 0; i < Settings.NUM_SPECIES; i++) {
+                this.species.add(new Species(this, Settings.NUM_CREATURES_PER_SPECIES, spawn0));
+            }            
         }
         
         public void loadFromFile(String filename) {

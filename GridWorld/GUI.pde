@@ -21,6 +21,8 @@
         float zoomLevel;
         PFont font;
         
+        float elapsed_time_since_screen_clear;
+        
         public GUI(World world) {
             this.world = world;
             this.creature = null;
@@ -34,6 +36,8 @@
             worldCenter = new PVector(-part, -part);
             
             font = createFont("Arial", 160, true);
+            
+            elapsed_time_since_screen_clear = 0f;
             
             resetPosition();
         }
@@ -55,6 +59,15 @@
         void preDraw() {
             translate(location.x, location.y);
             scale(zoomLevel);
+            
+            if (Settings.SCREEN_CLEAR_TIMER > 0f) {
+                elapsed_time_since_screen_clear += (1f / frameRate);
+                if (elapsed_time_since_screen_clear >= Settings.SCREEN_CLEAR_TIMER) {
+                    background(0,0,0);
+                    elapsed_time_since_screen_clear -= Settings.SCREEN_CLEAR_TIMER;
+                }
+            }
+            
         }
         
         void postDraw() {
@@ -114,7 +127,7 @@
             int x0 = xx-10;
             int y0 = yy-30;
             int w0 = 650;
-            int h0 = 250 + (150 * (world.species.size()));
+            int h0 = 500 + (150 * (world.species.size()));
             fill(255,0,0);
             rect(x0,y0,w0,h0);
             
@@ -123,6 +136,7 @@
                 Species target = world.species.get(i);
                 int max_gen = -1;
                 int total_gen = 0;
+                int[] gen_numbers = new int[target.creatures.size()];
                 for (int j = 0; j < target.creatures.size(); j++) {
                     if (target.creatures.get(j).generation > max_gen) {
                        max_gen = target.creatures.get(j).generation;
@@ -133,16 +147,22 @@
                        }
                     }
                     total_gen += target.creatures.get(j).generation;
+                    gen_numbers[j] = target.creatures.get(j).generation;
                 }
+                gen_numbers = sort(gen_numbers);
+                int half_index = gen_numbers.length / 2;
                 total_gen /= target.creatures.size();
                 String popSize = "(" + world.species.get(i).creatures.size() + ")";
                 String genCount = "(" + max_gen + ")";
                 String avrCount = "(" + total_gen + ")";
+                String medCount = "(" + gen_numbers[half_index] + ")";
                 text("Population : " + popSize, xx, yy);
                 yy += 50;
-                text("Max generation number : " + genCount, xx+50, yy);
+                text("---Max generation number : " + genCount, xx+50, yy);
                 yy += 50;
-                text("Average generation number : " + avrCount, xx+50, yy);
+                text("---Average generation number : " + avrCount, xx+50, yy);
+                yy += 50;
+                text("---Medium generation number : " + medCount, xx+50, yy);
                 yy += 50;
             }
             text("Frame rate : " + frameRate, xx, yy);
