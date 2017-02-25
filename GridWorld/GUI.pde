@@ -136,7 +136,7 @@
                 Species target = world.species.get(i);
                 int max_gen = -1;
                 int total_gen = 0;
-                int[] gen_numbers = new int[target.creatures.size()];
+                float average_brain_size = 0;
                 for (int j = 0; j < target.creatures.size(); j++) {
                     if (target.creatures.get(j).generation > max_gen) {
                        max_gen = target.creatures.get(j).generation;
@@ -147,22 +147,21 @@
                        }
                     }
                     total_gen += target.creatures.get(j).generation;
-                    gen_numbers[j] = target.creatures.get(j).generation;
+                    average_brain_size += target.creatures.get(j).brain.brain_size();
                 }
-                gen_numbers = sort(gen_numbers);
-                int half_index = gen_numbers.length / 2;
+                average_brain_size /= target.creatures.size();
                 total_gen /= target.creatures.size();
                 String popSize = "(" + world.species.get(i).creatures.size() + ")";
                 String genCount = "(" + max_gen + ")";
                 String avrCount = "(" + total_gen + ")";
-                String medCount = "(" + gen_numbers[half_index] + ")";
+                String avr_brain_count = "(" + average_brain_size + ")";
                 text("Population : " + popSize, xx, yy);
                 yy += 50;
                 text("---Max generation number : " + genCount, xx+50, yy);
                 yy += 50;
                 text("---Average generation number : " + avrCount, xx+50, yy);
                 yy += 50;
-                text("---Medium generation number : " + medCount, xx+50, yy);
+                text("---Average brain size : " + avr_brain_count, xx+50, yy);
                 yy += 50;
             }
             text("Frame rate : " + frameRate, xx, yy);
@@ -294,6 +293,11 @@
                Settings.TARGET_FRAME_RATE *= 0.9;
                if (Settings.TARGET_FRAME_RATE < 1) Settings.TARGET_FRAME_RATE = 1;
                frameRate(Settings.TARGET_FRAME_RATE);
+            } else if (key == 'e') {
+                background(0,0,0);
+                Settings.DRAW_TILES = !Settings.DRAW_TILES;
+            } else if (key == 'd') {
+                Settings.ALWAYS_REDRAW = !Settings.ALWAYS_REDRAW;   
             }
         }
     }

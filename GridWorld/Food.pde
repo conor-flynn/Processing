@@ -16,8 +16,16 @@ class Food extends Tile {
             this.current_life = 0; 
         }
         if (this.current_life < this.biome.food_energy_amount) {
-            this.current_life += this.biome.food_energy_growth_amount;
             this.regrowing = true;
+            this.current_life += this.biome.food_energy_growth_amount;
+            
+            if (this.current_life > this.biome.food_energy_amount) {
+                this.current_life = this.biome.food_energy_amount;
+                this.regrowing = false;
+                this.shouldRedraw = true;
+            }            
+        } else {
+            regrowing = false;
         }
     }
     
@@ -27,20 +35,40 @@ class Food extends Tile {
             fill(color(biome.color_red*percentage, biome.color_green*percentage, biome.color_blue*percentage));
             rect(x-w/2,y-w/2,w,w);   
             shouldRedraw = false;
-            regrowing = false;
+            //regrowing = false;
         }
     }
     
     float getLifePercentage() {
         return (this.current_life / biome.food_energy_amount); 
     }
-    
-    float getEvaluation() {
-        float r = biome.color_red   * biome.food_intensity;
-        float g = biome.color_green * biome.food_intensity;
-        float b = biome.color_blue  * biome.food_intensity;
-        float w = getLifePercentage();
+    float _get_evaluation(float value, float life_percentage) {
+        float result = (value * biome.food_intensity) / 255.0f;
+        result *= 0.7f;    // The food color is 70% of it
+        result += (life_percentage * 0.3f);    // The life percentage is 30% of it
+        if (result < 0f || result > 1.0f) {
+            println("Error------");
+            println(value);
+            println(life_percentage);
+            println(result);
+            println(biome.food_intensity);
+        }
+        assert(result >= 0f && result <= 1.0f);
+        return result;
+    }
+    float get_tile_evaluation_by_channel(int index) {
+        assert(index >= 0 && index <= 2);
         
-        return (((r + g + b)/255.0) + w) * 0.25;
+        float life_percentage = getLifePercentage();
+        switch(index) {
+            case 0:
+                return _get_evaluation(biome.color_red, life_percentage);
+            case 1:
+                return _get_evaluation(biome.color_green, life_percentage);
+            case 2:
+                return _get_evaluation(biome.color_blue, life_percentage);
+        }
+        assert(false);
+        return 0f;
     }
 }

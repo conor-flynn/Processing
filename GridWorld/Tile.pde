@@ -39,22 +39,33 @@
             }
         } 
         
-        float getEvaluation() {
-            if (creature == null) {
-                float r = (biome.color_red * biome.tile_intensity)/255.0;
-                float g = (biome.color_green * biome.tile_intensity)/255.0;
-                float b = (biome.color_blue * biome.tile_intensity)/255.0;                
-                return (r + g + b) * 0.25;
-            } else {
-                float r = creature.red;
-                float g = creature.green;
-                float b = creature.blue;
-                float v = creature.life / 10;
-                if (v > 1) v = 1;
-                return (((r+g+b)/255)+v)*0.25;
+        float get_tile_evaluation_by_channel(int index) {
+            assert(index >= 0 && index <= 2);
+            switch(index) {
+                case 0:
+                    return (biome.color_red * biome.tile_intensity)/255.0;
+                case 1:
+                    return (biome.color_green * biome.tile_intensity)/255.0;
+                case 2:
+                    return (biome.color_blue * biome.tile_intensity)/255.0;
             }
+            assert(false);
+            return 0f;
         }
-        
+        float get_tile_evaluation_by_channel_of_creature(int index) {
+            if (creature == null) return 0f;
+            
+            switch(index) {
+                case 0:
+                    return creature.red;
+                case 1:
+                    return creature.green;
+                case 2:
+                    return creature.blue;
+            }
+            assert(false);
+            return 0f;
+        }        
         String print() {
             return "(" + x + "," + y + ")";
         }

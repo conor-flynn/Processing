@@ -224,10 +224,17 @@
             gui.preDraw(); 
         }
         void draw() {
-            for (int i = 0; i < tiles.size(); i++) {
-                tiles.get(i).update();
-                tiles.get(i).draw();
-            }       
+            if (Settings.DRAW_TILES) {
+                for (int i = 0; i < tiles.size(); i++) {
+                    tiles.get(i).update();
+                    tiles.get(i).draw();
+                }
+            } else {
+                for (int i = 0; i < tiles.size(); i++) {
+                    tiles.get(i).update();
+                }   
+            }
+                   
             for (int i = 0; i < species.size(); i++) {
                species.get(i).update(); 
             }

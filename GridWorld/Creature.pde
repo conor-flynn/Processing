@@ -49,13 +49,15 @@ class Creature {
         }
         if (markedForDeath) return;
         
+        /*
         age++;
         if (age > Settings.CREATURE_DEATH_AGE) {
             killCreature();
             return;
         }
+        */
         
-        float multiplier = (species.creatures.size() / 300);
+        float multiplier = (species.creatures.size() / 150);
         if (multiplier < 1.0f) multiplier = 1f;
         this.life -= (this.life * 0.01) * (multiplier) * (brain.brain_size_multiplier());
         this.life -= (Settings.CREATURE_MINIMUM_DECAY_AMOUNT + this.tile.biome.movement_resistance);        
@@ -67,7 +69,7 @@ class Creature {
         
         brain.process();
         ArrayList<Float> results = brain.process_results;
-        if (results.size() != 3) {
+        if (results.size() != (3 + 2)) {
         	return;   
         }
         float x = results.get(0);
@@ -118,10 +120,16 @@ class Creature {
         blue = target.blue;
     }
     void mutate_color() {
-        float delta = 5;
+        /*
+        float delta = 2;
         float d1 = random(delta) - (delta/2);
         float d2 = random(delta) - (delta/2);
         float d3 = random(delta) - (delta/2);
+        */
+        float val = 2;
+        float d1 = random(-val, +val);
+        float d2 = random(-val, +val);
+        float d3 = random(-val, +val);
         
         red   += d1;
         green += d2;

@@ -20,7 +20,7 @@
      
     void draw () {
         // ----
-        if (FORCE_REDRAW) {
+        if (FORCE_REDRAW || Settings.ALWAYS_REDRAW) {
             background(0,0,0);
         }
         scale(1,-1);
