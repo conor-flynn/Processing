@@ -20,7 +20,7 @@
              static final PVector WORLD_TOP_LEFT_CORNER = new PVector(0, WORLD_WIDTH);
              static final PVector WORLD_TOP_RIGHT_CORNER = new PVector(WORLD_WIDTH, WORLD_WIDTH);
              
-             static final float BIOME_BLUR_RATE = 0.3;
+             static final float BIOME_BLUR_RATE = 0.0;
          
          // Evolution settings
              static final int NUM_SPECIES = 10;
