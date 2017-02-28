@@ -11,10 +11,20 @@ class Brain {
     
     Neuron constant_neuron;
     Neuron random_neuron;
+    
+    Neuron life_neuron;
+    Neuron timer_1_neuron;
+    boolean timer_1_direction = true;
+    Neuron timer_2_neuron;
+    boolean timer_2_direction = true;
+    
+    Neuron age_neuron;
+    Neuron reproductive_neuron;
+    
     Memory memory_1;
     Memory memory_2;
     
-    int special_inputs_count = 4;
+    int special_inputs_count = 9;
     
     Brain(Creature creature) {
         this.creature = creature;
@@ -47,7 +57,7 @@ class Brain {
             process_results.add(0f);
         }
         
-        int num_initial_workers = 7;
+        int num_initial_workers = 0;
         for (int i = 0; i < num_initial_workers; i++) {
             worker_neurons.put(neuron_id_count, new Neuron(neuron_id_count));
             neuron_id_count++;    
@@ -55,19 +65,26 @@ class Brain {
         
         constant_neuron = new Neuron(-2);
         random_neuron = new Neuron(-2);
+        life_neuron = new Neuron(-2);
+        timer_1_neuron = new Neuron(-2);
+        timer_2_neuron = new Neuron(-2);
+        age_neuron = new Neuron(-2);
+        reproductive_neuron = new Neuron(-2);
         
         for (int i = 0; i < 4; i++) {
             add_new_input();   
         }
-        for (int i = 0; i < num_initial_workers; i++) {
+        for (int i = 0; i < 10; i++) {
             add_new_connection_from_any_input();   
         }
         for (int i = 0; i < 10; i++) {    // TODO : How many 'basic' neurons should be added?
             bisect_any_connection();   
         }
+        /*
         for (int i = 0; i < 10; i++) {
             add_new_connection_from_middle_neuron_to_middle_neuron_or_output_neuron();
         }
+        */
     }
     int brain_size() {
         return (world_inputs.size()) + (worker_neurons.size());   
@@ -75,15 +92,10 @@ class Brain {
     float brain_size_multiplier() {
         float counter = 0;
         counter += (world_inputs.size());
-        counter += (worker_neurons.size());
+        counter += (worker_neurons.size());        
         
-        // 30 neurons is a lot?
-        float result = counter / 45.0f;
-        if (result < 1.0f) {
-            return 1.0f;
-        } else {
-            return result;
-        }
+        if (counter < 45) return (1f + (counter / 4000f));
+        else              return (1f + (counter / 2000));
     }
     void add_any_new_connection() {
         
@@ -106,7 +118,7 @@ class Brain {
         }
     }
     void mutate() {
-        int choice = ((int)random(0,200));
+        int choice = ((int)random(0, 250));
         
         if (choice <= 0) {
             bisect_any_connection();
@@ -114,20 +126,149 @@ class Brain {
             add_new_input();
         } else if (choice <= 2) {
             remove_world_input();
-        } else if (choice <= 25) {
+        } else if (choice <= 3) {
+            remove_random_middle_neuron();
+        } else if (choice <= 4) {
+            remove_random_axon();
+        } else if (choice <= 20) {
             add_any_new_connection();
-        } else if (choice <= 200) {
+        } else if (choice <= 250) {
             mutate_any_axon();
         }        
         creature.mutate_color();
     }
-    void __remove_any_connection() {
+    void remove_random_axon_from_special_inputs() {
+        Neuron source = get_random_special_neuron();
+        if (source.neuron_connections.size() == 0) return;
         
+        int index = ((int)random(0, source.neuron_connections.size()));
+        Axon axon = source.neuron_connections.get(index);
+        
+        Neuron target = get_middle_or_end_neuron_from_id(axon.target_id);
+        assert(--target.static_connections_count >= 0);
+        source.neuron_connections.remove(index);
     }
-    void __remove_pointless_neurons() {
-        /*
+    void remove_random_axon_from_world_inputs() {
+        Input source = get_random_world_input();
+        if (source == null) return;
+        if (source.neuron_connections.size() == 0) return;
+        int index = ((int)random(0, source.neuron_connections.size()));
+        Axon axon = source.neuron_connections.get(index);
         
-        */
+        Neuron target = get_middle_or_end_neuron_from_id(axon.target_id);
+        assert(--target.static_connections_count >= 0);
+        source.neuron_connections.remove(index);
+    }
+    void remove_random_axon_from_random_middle_neuron() {
+        Neuron source = get_random_worker_neuron();
+        if (source == null) return;
+        if (source.neuron_connections.size() == 0) return;
+        
+        int index = ((int)random(0, source.neuron_connections.size()));
+        Axon axon = source.neuron_connections.get(index);
+        
+        Neuron target = get_middle_or_end_neuron_from_id(axon.target_id);
+        assert(--target.static_connections_count >= 0);
+        source.neuron_connections.remove(index);
+    }
+    void remove_random_axon() {
+        int choice = (special_inputs_count) + (world_inputs.size()) + (worker_neurons.size());
+        
+        if (choice < special_inputs_count) {
+            remove_random_axon_from_special_inputs();
+            return;
+        }
+        choice -= special_inputs_count;
+        if (choice < world_inputs.size()) {
+            remove_random_axon_from_world_inputs();
+            return;
+        } else {
+            remove_random_axon_from_random_middle_neuron();
+            return;
+        }
+    }
+    void remove_connections_from_any_input_to_neuron(Neuron target) {
+        
+        remove_connections_from_world_inputs_to_neuron(target);        
+        
+        remove_connections_from_special_input_to_neuron(constant_neuron,           target);
+        remove_connections_from_special_input_to_neuron(random_neuron,             target);
+        remove_connections_from_special_input_to_neuron(life_neuron,               target);
+        remove_connections_from_special_input_to_neuron(timer_1_neuron,            target);
+        remove_connections_from_special_input_to_neuron(timer_2_neuron,            target);
+        remove_connections_from_special_input_to_neuron(age_neuron,                target);
+        remove_connections_from_special_input_to_neuron(reproductive_neuron,       target);
+        remove_connections_from_special_input_to_neuron(memory_1.input_neuron,     target);
+        remove_connections_from_special_input_to_neuron(memory_2.input_neuron,     target);
+    }
+    void remove_connections_from_special_input_to_neuron(Neuron source, Neuron target) {
+        for (int i = 0; i < source.neuron_connections.size(); i++) {
+            if (source.neuron_connections.get(i).target_id == target.neuron_id) {
+                source.neuron_connections.remove(i);
+                assert(--target.static_connections_count >= 0);
+                i--;
+            }
+        }
+        for (Axon axon : source.neuron_connections) {
+            assert(axon.target_id != target.neuron_id);   
+        }
+    }
+    void remove_connections_from_world_inputs_to_neuron(Neuron target) {
+        for (Input input : world_inputs) {
+            for (int i = 0; i < input.neuron_connections.size(); i++) {
+                if (input.neuron_connections.get(i).target_id == target.neuron_id) {
+                    input.neuron_connections.remove(i);
+                    assert(--target.static_connections_count >= 0);
+                    i--;
+                }
+            }
+        }
+        for (Input input : world_inputs) {
+            for (Axon axon : input.neuron_connections) {
+                assert(axon.target_id != target.neuron_id);
+            }
+        }
+    }
+    void remove_connections_from_middle_neurons_to_middle_neuron(Neuron target) {
+        for (Map.Entry me : worker_neurons.entrySet()) {
+            Neuron source = ((Neuron)me.getValue());
+            if (source.neuron_id == target.neuron_id) continue;
+            for (int i = 0; i < source.neuron_connections.size(); i++) {
+                if (source.neuron_connections.get(i).target_id == target.neuron_id) {
+                    source.neuron_connections.remove(i);
+                    assert(--target.static_connections_count >= 0);
+                    i--;
+                }
+            }
+        }
+        for (Map.Entry me : worker_neurons.entrySet()) {
+            for (Axon axon : ((Neuron)me.getValue()).neuron_connections) {
+                assert(axon.target_id != target.neuron_id);
+            }
+        }
+    }
+    void remove_middle_neuron(Neuron source) {
+        assert(source != null);
+        assert(source.static_connections_count >= 0);
+        remove_connections_from_any_input_to_neuron(source);
+        remove_connections_from_middle_neurons_to_middle_neuron(source);
+        
+        if (source.static_connections_count != 0) {
+            println(source.static_connections_count);
+        }
+        assert(source.static_connections_count == 0);
+        
+        for (Axon axon : source.neuron_connections) {
+            Neuron target = get_middle_or_end_neuron_from_id(axon.target_id);
+            assert(--target.static_connections_count >= 0);
+        }
+        
+        worker_neurons.remove(source.neuron_id);
+    }
+    void remove_random_middle_neuron() {
+        Neuron source = get_random_worker_neuron();
+        if (source == null) return;
+        remove_middle_neuron(source);
     }
     void remove_world_input() {
         
@@ -137,7 +278,7 @@ class Brain {
         Input input = world_inputs.get(choice);
         for (Axon axon : input.neuron_connections) {
             Neuron target = get_middle_or_end_neuron_from_id(axon.target_id);
-            target.static_connections_count--;
+            assert(--target.static_connections_count >= 0);
         }
         world_inputs.remove(choice);
     }
@@ -155,8 +296,17 @@ class Brain {
             output_neurons.put(neuron.neuron_id, neuron.deep_copy());
         }
         neuron_id_count = source.neuron_id_count;
+        
         constant_neuron = source.constant_neuron.deep_copy();
         random_neuron   = source.random_neuron.deep_copy();
+        
+        timer_1_neuron = source.timer_1_neuron.deep_copy();
+        timer_2_neuron = source.timer_2_neuron.deep_copy();
+        life_neuron = source.life_neuron.deep_copy();
+        
+        age_neuron = source.age_neuron.deep_copy();
+        reproductive_neuron = source.reproductive_neuron.deep_copy();
+        
         memory_1 = source.memory_1.deep_copy();
         memory_2 = source.memory_2.deep_copy();
     }
@@ -178,18 +328,7 @@ class Brain {
         }
     }
     void mutate_special_input_axon() {
-        int choice = ((int)random(0, special_inputs_count));
-        ArrayList<Axon> axons = new ArrayList<Axon>();
-        assert(choice >= 0 && choice < special_inputs_count);
-        if (choice == 0) {
-            axons = random_neuron.neuron_connections;
-        } else if (choice == 1) {
-            axons = constant_neuron.neuron_connections;
-        } else if (choice == 2) {
-            axons = memory_1.input_neuron.neuron_connections;
-        } else if (choice == 3) {
-            axons = memory_2.input_neuron.neuron_connections;
-        }
+        ArrayList<Axon> axons = get_random_special_neuron().neuron_connections;
         if (axons.size() == 0) return;
         Axon worker = get_random_axon_from_axons(axons);
         assert(worker != null);
@@ -207,9 +346,9 @@ class Brain {
         worker.weight += random(-0.1f, 0.1f);         
     }
     void mutate_worker_neuron_axon() {
-        assert(worker_neurons.size() > 0);
+        if (worker_neurons.size() == 0) return;
         Neuron source = get_random_worker_neuron();
-        assert(source != null);
+        if (source == null) return;
         
         if (source.neuron_connections.size() == 0) return;
         
@@ -236,6 +375,10 @@ class Brain {
         return false;
     }
     void form_connection(Neuron source, Neuron target) {
+        assert(output_neurons.get(source.neuron_id) == null);
+        if (source.neuron_id == target.neuron_id) {
+            return;  
+        }
         // Assumes there is no connection already
         Axon new_axon = new Axon();
         new_axon.source_id = source.neuron_id;
@@ -245,18 +388,14 @@ class Brain {
         target.static_connections_count++;
     }
     void add_new_connection_from_middle_neuron_to_middle_neuron_or_output_neuron() {
-        assert(worker_neurons.size() > 1);
+        if (worker_neurons.size() == 0) return;
         
         Neuron source = get_random_worker_neuron();
-        assert(source != null);
+        if (source == null) return;
+        Neuron target = get_random_worker_neuron_or_output_neuron();
+        if (target == null) return;
+        if (source.neuron_id == target.neuron_id) return;
         
-        Neuron target = null;        
-        while (target == null) {
-            target = get_random_worker_neuron_or_output_neuron();    // TODO : get random worker OR output neuron
-            assert(target != null);
-            if (source.neuron_id == target.neuron_id) target = null;
-        }
-        //if (has_connection(source.neuron_id, target.neuron_id)) return;        
         form_connection(source, target);
     }    
     void bisect_axon(Axon original_axon) {
@@ -280,17 +419,7 @@ class Brain {
     void bisect_special_input_connection() {
         int choice = ((int)random(0, special_inputs_count));
         
-        Neuron worker = null;
-        if (choice == 0) {
-            worker = random_neuron;
-        } else if (choice == 1) {
-            worker = constant_neuron;
-        } else if (choice == 2) {
-            worker = memory_1.input_neuron;
-        } else if (choice == 3) {
-            worker = memory_2.input_neuron;
-        }
-        assert(worker != null);
+        Neuron worker = get_random_special_neuron();
         
         if (worker.neuron_connections.size() == 0) return;
         
@@ -335,6 +464,7 @@ class Brain {
     }
     void bisect_worker_neuron_connection() {
         Neuron source_neuron = get_random_worker_neuron();
+        if (source_neuron == null) return;
         if (source_neuron.neuron_connections.size() == 0) return;
         Axon original_axon = get_random_axon_from_neuron(source_neuron);
         assert(original_axon != null);
@@ -351,19 +481,7 @@ class Brain {
         }
     }
     void add_new_connection_from_special_input() {
-        Neuron source = null;
-        int _choice = ((int)random(0, special_inputs_count));
-        if (_choice == 0) {
-            source = constant_neuron;   
-        } else if (_choice == 1) {
-            source = random_neuron;
-        } else if (_choice == 2) {
-            source = memory_1.input_neuron;
-        } else if (_choice == 3) {
-            source = memory_2.input_neuron;
-        }
-        assert(source != null);
-        
+        Neuron source = get_random_special_neuron();        
         Neuron target = get_random_worker_neuron_or_output_neuron();
         assert(target != null);
         form_connection(source, target);
@@ -392,8 +510,6 @@ class Brain {
         selection.neuron_connections.add(new_axon);
     }
     void add_new_input() {
-        
-        assert(worker_neurons.size() > 0);
         
         ArrayList<ArrayList<WorldConnection>> currents = new ArrayList<ArrayList<WorldConnection>>();
         currents.add(new ArrayList<WorldConnection>());
@@ -432,27 +548,6 @@ class Brain {
                 new_input.connection = new_connection;
                 new_input.channel = new_channel;
                 new_input.creature_or_tile = ((int)random(0,2));
-                
-                Axon new_axon = new Axon();
-                new_axon.weight = random(-1f,1f);
-                
-                int target_neuron_index = ((int)random(0, worker_neurons.size()));
-                assert(target_neuron_index < worker_neurons.size());
-                for (Map.Entry me : worker_neurons.entrySet()) {
-                    if (target_neuron_index == 0) {
-                        
-                        Neuron target = ((Neuron)me.getValue());
-                        
-                        new_axon.target_id = target.neuron_id;
-                        target.static_connections_count++;
-                        
-                        break;
-                    }
-                    target_neuron_index--;
-                }
-                assert(new_axon.target_id >= 0);
-                
-                new_input.neuron_connections.add(new_axon);
                 world_inputs.add(new_input);
                 return;
             }
@@ -470,10 +565,10 @@ class Brain {
         int target_y = current_y + connection.y;
         
         if ( (target_x < 0) || (target_x > Settings.NUM_TILES-1) ) {
-            return 0;
+            return -1;
         }
         if ( (target_y < 0) || (target_y > Settings.NUM_TILES-1) ) {
-            return 0;   
+            return -1;   
         }
         
         int target_index = (target_x) + (target_y * Settings.NUM_TILES);
@@ -491,6 +586,13 @@ class Brain {
          assert(creature != null);
          assert(random_neuron != null);
          assert(constant_neuron != null);
+         
+         assert(life_neuron != null);
+         assert(timer_1_neuron != null);
+         assert(timer_2_neuron != null);
+         
+         assert(age_neuron != null);
+         assert(reproductive_neuron != null);
          
          assert(memory_1 != null);
          assert(memory_1.input_neuron != null);
@@ -527,25 +629,57 @@ class Brain {
          constant_neuron.current_data = 1;
          axon_iteration(constant_neuron.neuron_connections, constant_neuron.current_data);
          
+         life_neuron.current_data = (creature.life / Settings.CREATURE_MAX_FOOD);
+         axon_iteration(life_neuron.neuron_connections, life_neuron.current_data);
+         
+         if (timer_1_direction) {
+             timer_1_neuron.current_data += (1f / (Settings.CREATURE_STARVATION_TIMER / 3));
+             if (timer_1_neuron.current_data > 1f) {
+                 timer_1_direction = false;   
+             }
+         } else {
+             timer_1_neuron.current_data -= (1f / (Settings.CREATURE_STARVATION_TIMER / 3));
+             if (timer_1_neuron.current_data < 0) {
+                 timer_1_direction = true;
+             }
+         }
+         assert(timer_1_neuron.current_data > -1 && timer_1_neuron.current_data < 2);
+         axon_iteration(timer_1_neuron.neuron_connections, timer_1_neuron.current_data);
+         
+         if (timer_2_direction) {
+             timer_2_neuron.current_data += (1f / (Settings.CREATURE_STARVATION_TIMER / 2));
+             if (timer_2_neuron.current_data > 1f) {
+                 timer_2_direction = false;   
+             }
+         } else {
+             timer_2_neuron.current_data -= (1f / (Settings.CREATURE_STARVATION_TIMER / 2));
+             if (timer_2_neuron.current_data < 0) {
+                 timer_2_direction = true;
+             }
+         }
+         assert(timer_2_neuron.current_data > -1 && timer_2_neuron.current_data < 2);
+         axon_iteration(timer_2_neuron.neuron_connections, timer_2_neuron.current_data);
+         
+         age_neuron.current_data = ((float)this.creature.age) 
+                                 / ((float)Settings.CREATURE_DEATH_AGE);
+         reproductive_neuron.current_data = ((float)this.creature.reproductive_count) 
+                                          / ((float)Settings.CREATURE_REPRODUCTIVE_LIMIT);
+         axon_iteration(age_neuron.neuron_connections, age_neuron.current_data);
+         axon_iteration(reproductive_neuron.neuron_connections, reproductive_neuron.current_data);
+         
          axon_iteration(memory_1.input_neuron.neuron_connections, memory_1.input_neuron.current_data);
          axon_iteration(memory_2.input_neuron.neuron_connections, memory_2.input_neuron.current_data);
          
-         //println("-----------");
          for (Map.Entry me : output_neurons.entrySet()) {
              
              Neuron target = ((Neuron)me.getValue());
              float resulting_data = target.current_data;
              resulting_data = negsig(resulting_data);
              
-             //println("(" + target.current_data + ") ---> (" + resulting_data + ")");
-             
              int result_index = target.neuron_id;
              assert(result_index >= 0 && result_index < process_results.size());
              process_results.set(result_index, resulting_data);    // TODO : Clamp current_data?
-             
          }
-         //println();
-         //print(worker_neurons.size() + ",");
     }
     boolean push_data_to_internal(Neuron neuron, float data) { //<>//
         // Pushes a value to the neuron. If this 'fills' the neuron, return true
@@ -556,7 +690,6 @@ class Brain {
         return (difference == 0);
     }
     void send_input(Input source, float data) {
-        assert(source.neuron_connections.size() > 0);
         axon_iteration(source.neuron_connections, data);
     }
     void axon_iteration(ArrayList<Axon> axons, float current_data) {
@@ -625,6 +758,33 @@ class Brain {
     
     
     
+    Neuron get_random_special_neuron() {
+        Neuron source = null;
+        
+        int choice = ((int)random(0, special_inputs_count));
+        if (choice == 0) {
+            source = random_neuron;
+        } else if (choice == 1) {
+            source = constant_neuron;
+        } else if (choice == 2) {
+            source = memory_1.input_neuron;
+        } else if (choice == 3) {
+            source = memory_2.input_neuron;
+        } else if (choice == 4) {
+            source = life_neuron;   
+        } else if (choice == 5) {
+            source = timer_1_neuron;
+        } else if (choice == 6) {
+            source = timer_2_neuron;
+        } else if (choice == 7) {
+            source = age_neuron;
+        } else if (choice == 8) {
+            source = reproductive_neuron;
+        }
+        assert(source != null);
+        
+        return source;
+    }
     Input get_random_world_input() {
         int iteration = ((int)random(0, world_inputs.size()));
         Input selection = null;
@@ -676,7 +836,8 @@ class Brain {
         return selection;
     }
     Neuron get_random_worker_neuron() {
-        assert(worker_neurons.size() > 0);
+        if (worker_neurons.size() == 0) return null;
+        //assert(worker_neurons.size() > 0);
         Neuron selection = null;
         int _index = ((int)random(0, worker_neurons.size()));
         for (Map.Entry me : worker_neurons.entrySet()) {
@@ -730,6 +891,7 @@ class Neuron {
         new_neuron.neuron_id = neuron_id;
         new_neuron.current_data = current_data;
         new_neuron.static_connections_count = static_connections_count;
+        assert(new_neuron.static_connections_count >= 0);
         new_neuron.dynamic_connections_count = 0;
         for (Axon axon : neuron_connections) {
             new_neuron.neuron_connections.add(axon.deep_copy());

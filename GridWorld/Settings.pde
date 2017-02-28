@@ -9,6 +9,7 @@
              static final float SCREEN_CLEAR_TIMER = 0f;
              static boolean DRAW_TILES = true;
              static boolean ALWAYS_REDRAW = false;
+             
       
          // World settings
              static int NUM_TILES = -1;
@@ -23,18 +24,24 @@
              static final float BIOME_BLUR_RATE = 0.0;
          
          // Evolution settings
-             static final int NUM_SPECIES = 10;
+             static final int NUM_SPECIES = 3;
              static final int NUM_CREATURES_PER_SPECIES = 10;
              
-             static final float REPRODUCTION_EFFICIENCY = 1.0; // How much energy gets passed to the child. 0.3 means 70% of the energy is lost.
-             static final float CREATURE_CHILD_SACRIFICE_AMOUNT = 0.45; // How much of the creatures life is devoted t the child.
-             
-             static final float CREATURE_MINIMUM_DECAY_AMOUNT = 0.01;
-             static final int CREATURE_STALL_MUTATION_LIMIT = 10;
-             static final int CREATURE_DEATH_AGE = 1000;
-             static final float CREATURE_PLANT_EAT_AMOUNT = 0.1;
-             static final float CREATURE_CREATURE_EAT_AMOUNT = 1;
+             static final float CREATURE_EAT_CREATURE_MULTIPLIER = 1.5f;
+             static final float CREATURE_EAT_PLANT_MULTIPLIER = 0.9f;
              
              static final float CREATURE_MINIMUM_MOVEMENT_THRESHOLD = 0.01f;
              static final float CREATURE_MINIMUM_REPRODUCTIVE_THRESHOLD = 0.15f;
+             
+             static final float FOOD_RESPAWN_TIME = 60f;
+             static final float CREATURE_STARVATION_TIMER = 120f;    //45
+             
+             static final float CREATURE_BIRTH_FOOD = 1;
+             static final float CREATURE_MAX_FOOD = 3;
+             static final float FOOD_BIRTH_FOOD = 1;
+             
+             static final float OVER_EAT_PUNISHMENT = 2.25f;
+             
+             static final int CREATURE_REPRODUCTIVE_LIMIT = 3;
+             static final int CREATURE_DEATH_AGE = (int)(5 * CREATURE_STARVATION_TIMER);
     }

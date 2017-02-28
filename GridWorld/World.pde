@@ -61,9 +61,10 @@
                                 biomeData.getFloat("color_green"), 
                                 biomeData.getFloat("color_blue"),
                                 
-                                biomeData.getFloat("food_spawn_percentage"),
-                                biomeData.getFloat("food_energy_amount"),
-                                biomeData.getFloat("food_energy_growth_amount"),
+                                biomeData.getFloat("tiles_per_creature"),
+                                //biomeData.getFloat("food_spawn_percentage"),
+                                //biomeData.getFloat("food_energy_amount"),
+                                //biomeData.getFloat("food_energy_growth_amount"),
                                 
                                 biomeData.getFloat("movement_resistance"),
                                 
@@ -95,10 +96,7 @@
                 for (int colIter = 0; colIter < rowData.length; colIter+=2) {
                     String label = Character.toString(rowData[colIter]) + Character.toString(rowData[colIter+1]);
                     Biome target = biomes.get(label);
-                    if (target == null) {
-                        println("Cannot find biome");
-                        return;
-                    }
+                    assert(target != null);
                     
                     int colIndex = colIter/2;
                     int x = (colIndex * Settings.TILE_WIDTH);
@@ -141,27 +139,11 @@
                      }
                 }
             }
-            
-            //for (int i = 0; i < tiles.size(); i++) {
-            //    if (random(1) < Settings.BIOME_BLUR_RATE) {
-            //         Tile self = tiles.get(i);
-            //         Biome newBiome = null;
-            //         for (Map.Entry me : self.neighbors.entrySet()) {
-            //             Biome target = ((Tile)me.getValue()).biome;
-            //             if (self.biome != target) {
-            //                 newBiome = target; 
-            //             }
-            //         }
-            //         if (newBiome != null) {
-            //             tiles.get(i).biome = newBiome; 
-            //         }
-            //    }
-            //}
         }
         
         Tile buildTileFromFile(Biome target, int x, int y, int w, int index) {
-             
-             if (random(1) < target.food_spawn_rate) {
+             float chance = (1f / target.tiles_per_creature);
+             if (random(1) < chance) {
                  Food f = new Food(x, y, w, index, target);
                  return f;
              } else {

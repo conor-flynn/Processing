@@ -1,72 +1,66 @@
 class Food extends Tile {
   
     float current_life;
+    float original_life;
+    
     Biome biome;
-    Boolean regrowing;
+    boolean edible;
     
     public Food(int xx, int yy, int ww, int index, Biome biome) {
         super(xx, yy, ww, index, biome);
         this.biome = biome;
-        this.current_life = this.biome.food_energy_amount;
-        this.regrowing = false;
+        
+        this.original_life = Settings.FOOD_BIRTH_FOOD;
+        this.current_life = this.original_life;
+        
+        this.edible = true;
     }
-    
     void update() {
-        if (this.current_life < 0) {
-            this.current_life = 0; 
+        
+        if (this.creature != null) {
+            this.edible = false;
+            return;
         }
-        if (this.current_life < this.biome.food_energy_amount) {
-            this.regrowing = true;
-            this.current_life += this.biome.food_energy_growth_amount;
-            
-            if (this.current_life > this.biome.food_energy_amount) {
-                this.current_life = this.biome.food_energy_amount;
-                this.regrowing = false;
-                this.shouldRedraw = true;
-            }            
-        } else {
-            regrowing = false;
+        if (this.current_life == this.original_life) {
+            this.edible = true;
+            return;
+        }
+        
+        this.current_life += (1 / Settings.FOOD_RESPAWN_TIME);
+        if (this.current_life >= this.original_life) {
+            this.current_life = this.original_life;
+            this.edible = true;
+            shouldRedraw = true;
         }
     }
-    
     void draw() {
-        if (shouldRedraw || regrowing || FORCE_REDRAW) {
-            float percentage = biome.food_intensity;
-            fill(color(biome.color_red*percentage, biome.color_green*percentage, biome.color_blue*percentage));
+        if (shouldRedraw || FORCE_REDRAW) {
+            fill(
+                color(
+                    _get_evaluation(biome.color_red),
+                    _get_evaluation(biome.color_green),
+                    _get_evaluation(biome.color_blue)));
             rect(x-w/2,y-w/2,w,w);   
             shouldRedraw = false;
-            //regrowing = false;
         }
     }
-    
-    float getLifePercentage() {
-        return (this.current_life / biome.food_energy_amount); 
-    }
-    float _get_evaluation(float value, float life_percentage) {
-        float result = (value * biome.food_intensity) / 255.0f;
-        result *= 0.7f;    // The food color is 70% of it
-        result += (life_percentage * 0.3f);    // The life percentage is 30% of it
-        if (result < 0f || result > 1.0f) {
-            println("Error------");
-            println(value);
-            println(life_percentage);
-            println(result);
-            println(biome.food_intensity);
+    float _get_evaluation(float value) {
+        if (this.edible) {
+            return (value * biome.food_intensity);   
+        } else {
+            return (value * biome.tile_intensity);
         }
-        assert(result >= 0f && result <= 1.0f);
-        return result;
     }
     float get_tile_evaluation_by_channel(int index) {
         assert(index >= 0 && index <= 2);
         
-        float life_percentage = getLifePercentage();
         switch(index) {
             case 0:
-                return _get_evaluation(biome.color_red, life_percentage);
+                return _get_evaluation(biome.color_red);
             case 1:
-                return _get_evaluation(biome.color_green, life_percentage);
+                return _get_evaluation(biome.color_green);
             case 2:
-                return _get_evaluation(biome.color_blue, life_percentage);
+                return _get_evaluation(biome.color_blue);
         }
         assert(false);
         return 0f;
