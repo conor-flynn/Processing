@@ -3,8 +3,11 @@
     import java.util.*;
     class World {        
         GUI gui;
-        float plantMatterConsumed = 0;
-        float creatureMatterConsumed = 0;
+        long plantMatterConsumed = 0;
+        long creatureMatterConsumed = 0;
+        float lossToMovementResistance = 0;
+        float lossToReproductiveInefficiency = 0;
+        float lossToLifeByAging = 0;
       
         ArrayList<Tile> tiles = new ArrayList<Tile>();
         HashMap<String, Biome> biomes = new HashMap<String, Biome>();
@@ -40,7 +43,31 @@
                 this.species.add(new Species(this, Settings.NUM_CREATURES_PER_SPECIES, spawn0));
             }            
         }
-        
+        float get_tile_posx_by_index(int x) {
+            float tile_size = Settings.TILE_WIDTH;
+            if (x > 0) {
+                return (tile_size / 2f) + (tile_size * x);
+            } else {
+                return (-tile_size / 2f) - (tile_size * x);   
+            }
+        }
+        float get_tile_posy_by_index(int y) {
+            float tile_size = Settings.TILE_WIDTH;
+            if (y > 0) {
+                return (tile_size / 2f) + (tile_size * y);
+            } else {
+                return (-tile_size / 2f) - (tile_size * y);   
+            }
+        }
+        Tile get_tile_at_point(int x, int y) {
+            if ((x < 0 || x > (Settings.NUM_TILES-1)) || (y < 0 || y > (Settings.NUM_TILES-1))) {
+                return null;        
+            }
+            int index = (x) + (Settings.NUM_TILES * y);
+            assert(index >= 0 && index < (Settings.NUM_TILES * Settings.NUM_TILES)); 
+            
+            return tiles.get(index);
+        }
         public void loadFromFile(String filename) {
             JSONObject worldData = loadJSONObject(filename);
             JSONArray biomesData  = worldData.getJSONArray("biomes");
@@ -203,10 +230,11 @@
         }
         
         void preDraw() {
-            gui.preDraw(); 
+            if (Settings.DRAW_SIMULATION) gui.preDraw(); 
         }
         void draw() {
-            if (Settings.DRAW_TILES) {
+            noStroke();
+            if (Settings.DRAW_SIMULATION && Settings.DRAW_TILES) {
                 for (int i = 0; i < tiles.size(); i++) {
                     tiles.get(i).update();
                     tiles.get(i).draw();
@@ -220,12 +248,15 @@
             for (int i = 0; i < species.size(); i++) {
                species.get(i).update(); 
             }
-            for (int i = 0; i < species.size(); i++) {
-               species.get(i).draw();
+            if (Settings.DRAW_SIMULATION) {
+                for (int i = 0; i < species.size(); i++) {
+                   species.get(i).draw();
+                }
             }
         }
         void postDraw() {
-            gui.postDraw(); 
+            generation++;
+            if (Settings.DRAW_SIMULATION) gui.postDraw(); 
         }
         
         Tile findFoodSpawn() {

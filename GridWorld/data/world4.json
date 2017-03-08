@@ -31,7 +31,7 @@
 				"label"  : "l0",
 				"name" : "Land",
 				
-				"tiles_per_creature" : 11,
+				"tiles_per_creature" : 5,
 
 				"movement_resistance" : 0.0,
 				"food_intensity" : 1,
@@ -44,7 +44,7 @@
 				"label"  : "l1",
 				"name" : "Grassland",
 				
-				"tiles_per_creature" : 13,
+				"tiles_per_creature" : 6,
 
 				"movement_resistance" : 0,
 				"food_intensity" : 1,

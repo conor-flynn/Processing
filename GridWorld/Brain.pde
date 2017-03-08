@@ -3,6 +3,7 @@ import java.util.Map;
 class Brain {
   
     Creature creature;
+    Parameters params;
     ArrayList<Float> process_results = new ArrayList<Float>();
     ArrayList<Input> world_inputs = new ArrayList<Input>();
     HashMap<Integer, Neuron> worker_neurons = new HashMap<Integer, Neuron>();
@@ -45,6 +46,18 @@ class Brain {
             process_results.add(0f);
             
             output_neurons.put(neuron_id_count, new Neuron(neuron_id_count));
+            neuron_id_count++;
+            process_results.add(0f);
+            
+            output_neurons.put(neuron_id_count, new Neuron(neuron_id_count));
+            neuron_id_count++;
+            process_results.add(0f);
+            
+            output_neurons.put(neuron_id_count, new Neuron(neuron_id_count));
+            neuron_id_count++;
+            process_results.add(0f);
+            
+            output_neurons.put(neuron_id_count, new Neuron(neuron_id_count));
             Neuron memory_input_1 = new Neuron(-2);
             memory_1 = new Memory(memory_input_1, output_neurons.get(neuron_id_count));
             neuron_id_count++;
@@ -71,18 +84,20 @@ class Brain {
         age_neuron = new Neuron(-2);
         reproductive_neuron = new Neuron(-2);
         
-        for (int i = 0; i < 4; i++) {
+        params = new Parameters();
+        
+        for (int i = 0; i < 5; i++) {
             add_new_input();   
         }
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 20; i++) {
             add_new_connection_from_any_input();   
         }
-        for (int i = 0; i < 10; i++) {    // TODO : How many 'basic' neurons should be added?
+        for (int i = 0; i < 10; i++) {
             bisect_any_connection();   
         }
         /*
-        for (int i = 0; i < 10; i++) {
-            add_new_connection_from_middle_neuron_to_middle_neuron_or_output_neuron();
+        for (int i = 0; i < 4; i++) {    // TODO : How many 'basic' neurons should be added?
+            bisect_any_connection();   
         }
         */
     }
@@ -94,8 +109,7 @@ class Brain {
         counter += (world_inputs.size());
         counter += (worker_neurons.size());        
         
-        if (counter < 45) return (1f + (counter / 4000f));
-        else              return (1f + (counter / 2000));
+        return (1f + (counter / params.brain_size_multiplier_divider));
     }
     void add_any_new_connection() {
         
@@ -118,24 +132,28 @@ class Brain {
         }
     }
     void mutate() {
-        int choice = ((int)random(0, 250));
+        if (random(1) > Settings.CREATURE_MUTATION_RATE) return;
+        //if (random(1) < params.ichance_mutate_parameters) params.mutate();
         
-        if (choice <= 0) {
+        if (random(1) < params.chance_bisect_any_connection) {
+            // TODO: Add new connections from THIS new bisection
             bisect_any_connection();
-        } else if (choice <= 1) {
-            add_new_input();
-        } else if (choice <= 2) {
-            remove_world_input();
-        } else if (choice <= 3) {
-            remove_random_middle_neuron();
-        } else if (choice <= 4) {
-            remove_random_axon();
-        } else if (choice <= 20) {
             add_any_new_connection();
-        } else if (choice <= 250) {
-            mutate_any_axon();
-        }        
-        creature.mutate_color();
+            add_any_new_connection();
+        }
+        if (random(1) < params.chance_add_new_input){
+            // TODO: Add new connections from THIS new input
+            add_new_input();
+            add_any_new_connection();
+            add_any_new_connection();
+        }
+        if (random(1) < params.chance_remove_world_input) remove_world_input();
+        if (random(1) < params.chance_remove_random_middle_neuron) remove_random_middle_neuron();
+        if (random(1) < params.chance_remove_random_axon) remove_random_axon();
+        if (random(1) < params.chance_add_any_new_connection) add_any_new_connection();
+        if (random(1) < params.chance_mutate_any_axon) mutate_any_axon();
+        
+        creature.mutate_color(params.creature_color_mutation_range);
     }
     void remove_random_axon_from_special_inputs() {
         Neuron source = get_random_special_neuron();
@@ -282,6 +300,9 @@ class Brain {
         }
         world_inputs.remove(choice);
     }
+    Brain(Brain a, Brain b, Creature creature) {
+        
+    }
     Brain(Brain source, Creature creature) {
         this.creature = creature;
         
@@ -309,6 +330,8 @@ class Brain {
         
         memory_1 = source.memory_1.deep_copy();
         memory_2 = source.memory_2.deep_copy();
+        
+        params = source.params.deep_copy();
     }
     void mutate_any_axon() {
         // Axons aren't weighted evenly
@@ -332,7 +355,7 @@ class Brain {
         if (axons.size() == 0) return;
         Axon worker = get_random_axon_from_axons(axons);
         assert(worker != null);
-        worker.weight += random(-0.1f, 0.1f);
+        worker.weight += random(-params.axon_weight_mutation_range, params.axon_weight_mutation_range);
     }
     void mutate_input_axon() {
         
@@ -343,7 +366,7 @@ class Brain {
         
         Axon worker = get_random_axon_from_input(source);
         assert(worker != null);
-        worker.weight += random(-0.1f, 0.1f);         
+        worker.weight += random(-params.axon_weight_mutation_range, params.axon_weight_mutation_range);         
     }
     void mutate_worker_neuron_axon() {
         if (worker_neurons.size() == 0) return;
@@ -354,7 +377,7 @@ class Brain {
         
         Axon worker = get_random_axon_from_neuron(source);
         assert(worker != null);
-        worker.weight += random(-0.1f, 0.1f); 
+        worker.weight += random(-params.axon_weight_mutation_range, params.axon_weight_mutation_range); 
     }
     boolean has_connection(int original_neuron_id, int current_neuron_id) {
         if (original_neuron_id == current_neuron_id) return true;
@@ -383,7 +406,7 @@ class Brain {
         Axon new_axon = new Axon();
         new_axon.source_id = source.neuron_id;
         new_axon.target_id = target.neuron_id;
-        new_axon.weight = random(-1f,1f);
+        new_axon.weight = random(-params.new_axon_initial_weight, params.new_axon_initial_weight);
         source.neuron_connections.add(new_axon);
         target.static_connections_count++;
     }
@@ -504,29 +527,31 @@ class Brain {
         }
         Axon new_axon = new Axon();
         new_axon.target_id = target.neuron_id;
-        new_axon.weight = random(-1f,1f);
+        new_axon.weight = random(-params.new_axon_initial_weight, params.new_axon_initial_weight);
         target.static_connections_count++;
         
         selection.neuron_connections.add(new_axon);
     }
     void add_new_input() {
         
-        ArrayList<ArrayList<WorldConnection>> currents = new ArrayList<ArrayList<WorldConnection>>();
-        currents.add(new ArrayList<WorldConnection>());
-        currents.add(new ArrayList<WorldConnection>());
-        currents.add(new ArrayList<WorldConnection>());
+        ArrayList<WorldConnection> currents = new ArrayList<WorldConnection>();
         
         int left_x = 0, 
             right_x = 0, 
             bot_y = 0, 
             top_y = 0;
+        int creature_or_tile = ((int)random(0,2));
+        int new_channel = ((int)random(0,3));
+        
         for (Input input : world_inputs) {
+            if (input.creature_or_tile != creature_or_tile) continue;
+            if (input.channel != new_channel) continue;
             
             int channel = input.channel;
             
             WorldConnection current = input.connection;
-            assert(!currents.get(channel).contains(current));
-            currents.get(channel).add(current);
+            assert(!currents.contains(current));
+            currents.add(current);
             
             int x = current.x;
             int y = current.y;
@@ -538,16 +563,14 @@ class Brain {
         }
         
         while (true) {
-            int new_x = ((int)(random(left_x-2, right_x+2)));
-            int new_y = ((int)(random(bot_y-2, top_y+2)));
-            int new_channel = ((int)random(0,3));
+            int new_x = ((int)(random(left_x-1, right_x+2)));
+            int new_y = ((int)(random(bot_y-1, top_y+2)));
             WorldConnection new_connection = new WorldConnection(new_x, new_y);
-            if (! (currents.get(new_channel).contains(new_connection)) ) {
-                
+            if (!currents.contains(new_connection)) {                
                 Input new_input = new Input();                
                 new_input.connection = new_connection;
                 new_input.channel = new_channel;
-                new_input.creature_or_tile = ((int)random(0,2));
+                new_input.creature_or_tile = creature_or_tile;
                 world_inputs.add(new_input);
                 return;
             }
@@ -565,21 +588,23 @@ class Brain {
         int target_y = current_y + connection.y;
         
         if ( (target_x < 0) || (target_x > Settings.NUM_TILES-1) ) {
-            return -1;
+            return -1.0f;
         }
         if ( (target_y < 0) || (target_y > Settings.NUM_TILES-1) ) {
-            return -1;   
+            return -1.0f;   
         }
         
         int target_index = (target_x) + (target_y * Settings.NUM_TILES);
         //return random(-1f,1f);
+        float result = -1;
         if (input.creature_or_tile == 0) {
-            return creature.species.world
+            result = creature.species.world
                     .tiles.get(target_index).get_tile_evaluation_by_channel(input.channel);
         } else {
-            return creature.species.world
+            result = creature.species.world
                     .tiles.get(target_index).get_tile_evaluation_by_channel_of_creature(input.channel);
-        }        
+        }
+        return result;
     }  
     void process() {
         
@@ -602,8 +627,8 @@ class Brain {
          assert(memory_2.input_neuron != null);
          assert(memory_2.output_neuron != null);
          
-         assert(output_neurons.size() == 5);
-         assert(process_results.size() == 5);
+         assert(output_neurons.size() == 8);
+         assert(process_results.size() == 8);
          
          for (Map.Entry me : worker_neurons.entrySet()) {
              Neuron target = ((Neuron)me.getValue());
@@ -620,17 +645,18 @@ class Brain {
          
          for (Input input : world_inputs) {
              float evaluation = evaluate_position(input);
+             evaluation *= params.brain_input_multiplier;
              send_input(input, evaluation);
          }         
          
          random_neuron.current_data = random(-1f,1f);
-         axon_iteration(random_neuron.neuron_connections, random_neuron.current_data);
+         axon_iteration(random_neuron.neuron_connections, random_neuron.current_data * params.brain_input_multiplier);
          
          constant_neuron.current_data = 1;
-         axon_iteration(constant_neuron.neuron_connections, constant_neuron.current_data);
+         axon_iteration(constant_neuron.neuron_connections, constant_neuron.current_data * params.brain_input_multiplier);
          
          life_neuron.current_data = (creature.life / Settings.CREATURE_MAX_FOOD);
-         axon_iteration(life_neuron.neuron_connections, life_neuron.current_data);
+         axon_iteration(life_neuron.neuron_connections, life_neuron.current_data * params.brain_input_multiplier);
          
          if (timer_1_direction) {
              timer_1_neuron.current_data += (1f / (Settings.CREATURE_STARVATION_TIMER / 3));
@@ -643,8 +669,14 @@ class Brain {
                  timer_1_direction = true;
              }
          }
-         assert(timer_1_neuron.current_data > -1 && timer_1_neuron.current_data < 2);
-         axon_iteration(timer_1_neuron.neuron_connections, timer_1_neuron.current_data);
+         if (timer_1_neuron.current_data < -1) {
+             timer_1_neuron.current_data = -1;
+             timer_1_direction = true;
+         } else if (timer_1_neuron.current_data > 2) {
+             timer_1_neuron.current_data = 2;
+             timer_1_direction = false;
+         }
+         axon_iteration(timer_1_neuron.neuron_connections, timer_1_neuron.current_data * params.brain_input_multiplier);
          
          if (timer_2_direction) {
              timer_2_neuron.current_data += (1f / (Settings.CREATURE_STARVATION_TIMER / 2));
@@ -657,18 +689,24 @@ class Brain {
                  timer_2_direction = true;
              }
          }
-         assert(timer_2_neuron.current_data > -1 && timer_2_neuron.current_data < 2);
-         axon_iteration(timer_2_neuron.neuron_connections, timer_2_neuron.current_data);
+         if (timer_2_neuron.current_data < -1) {
+             timer_2_neuron.current_data = -1;
+             timer_2_direction = true;
+         } else if (timer_2_neuron.current_data > 2) {
+             timer_2_neuron.current_data = 2;
+             timer_2_direction = false;
+         }
+         axon_iteration(timer_2_neuron.neuron_connections, timer_2_neuron.current_data * params.brain_input_multiplier);
          
          age_neuron.current_data = ((float)this.creature.age) 
                                  / ((float)Settings.CREATURE_DEATH_AGE);
          reproductive_neuron.current_data = ((float)this.creature.reproductive_count) 
                                           / ((float)Settings.CREATURE_REPRODUCTIVE_LIMIT);
-         axon_iteration(age_neuron.neuron_connections, age_neuron.current_data);
-         axon_iteration(reproductive_neuron.neuron_connections, reproductive_neuron.current_data);
+         axon_iteration(age_neuron.neuron_connections, age_neuron.current_data * params.brain_input_multiplier);
+         axon_iteration(reproductive_neuron.neuron_connections, reproductive_neuron.current_data * params.brain_input_multiplier);
          
-         axon_iteration(memory_1.input_neuron.neuron_connections, memory_1.input_neuron.current_data);
-         axon_iteration(memory_2.input_neuron.neuron_connections, memory_2.input_neuron.current_data);
+         axon_iteration(memory_1.input_neuron.neuron_connections, memory_1.input_neuron.current_data * params.brain_input_multiplier);
+         axon_iteration(memory_2.input_neuron.neuron_connections, memory_2.input_neuron.current_data * params.brain_input_multiplier);
          
          for (Map.Entry me : output_neurons.entrySet()) {
              
@@ -822,7 +860,7 @@ class Brain {
         }
     }
     Neuron get_random_output_neuron() {
-        assert(output_neurons.size() == 5);
+        assert(output_neurons.size() == 8);
         Neuron selection = null;
         int _index = ((int)random(0, output_neurons.size()));
         for (Map.Entry me : output_neurons.entrySet()) {
@@ -870,7 +908,101 @@ class Brain {
        return val-1;
     }
 }
-
+class Parameters {
+    // --
+    float ichance_mutate_parameters            = 1f;
+    // --
+    int brain_size_multiplier_divider          = 4000;
+    // --
+    float brain_input_multiplier               = 1.0f;
+    // --
+    float chance_bisect_any_connection         = 0.10000f;    // adds 1 neuron, 1 connection
+    float chance_add_new_input                 = 0.20000f;    // adds 1 neuron
+    float chance_remove_world_input            = 0.01000f;    // remove 1 neuron, and 'x' connections
+    float chance_remove_random_middle_neuron   = 0.01000f;    // remove 1 neuron, and 'x' + 'y' connections
+    float chance_remove_random_axon            = 0.01000f;    // remove 1 connection
+    float chance_add_any_new_connection        = 0.30000f;    // add 1 connection
+    float chance_mutate_any_axon               = 0.10000f;    // mutate connection
+    // --
+    float new_axon_initial_weight              = 1f;
+    // --
+    float axon_weight_mutation_range           = 0.1f;
+    // --
+    float creature_color_mutation_range        = 0.10f;
+    
+    Parameters(){}
+    Parameters deep_copy() {
+        Parameters newp = new Parameters();
+            newp.ichance_mutate_parameters = ichance_mutate_parameters;
+            newp.brain_size_multiplier_divider = brain_size_multiplier_divider;
+            newp.brain_input_multiplier = brain_input_multiplier;
+            newp.chance_bisect_any_connection = chance_bisect_any_connection;
+            newp.chance_add_new_input = chance_add_new_input;
+            newp.chance_remove_world_input = chance_remove_world_input;
+            newp.chance_remove_random_middle_neuron = chance_remove_random_middle_neuron;
+            newp.chance_remove_random_axon = chance_remove_random_axon;
+            newp.chance_add_any_new_connection = chance_add_any_new_connection;
+            newp.chance_mutate_any_axon = chance_mutate_any_axon;
+            newp.new_axon_initial_weight = new_axon_initial_weight;
+            newp.axon_weight_mutation_range = axon_weight_mutation_range;
+            newp.creature_color_mutation_range = creature_color_mutation_range;
+        return newp;
+    }
+    int mut(int current, int lower_limit, int delta) {
+        current += ((int)random(-delta-1, +delta+1));
+        if (current > lower_limit) return current;
+        return lower_limit;
+    }
+    float mut(float current, float lower_limit, float delta) {
+        current += random(-delta, +delta);
+        if (current > lower_limit) return current;
+        return lower_limit;
+    }
+    void mutate() {
+        // --
+        ichance_mutate_parameters = mut(ichance_mutate_parameters,                           0.01f, 0.00001f);
+        // --
+        brain_size_multiplier_divider      = mut(brain_size_multiplier_divider,              1, 10);
+        // --
+        brain_input_multiplier             = mut(brain_input_multiplier,                     0.00001f, 0.0001f);
+        chance_bisect_any_connection       = mut(chance_bisect_any_connection,               0.00001f, 0.0001f);
+        chance_add_new_input               = mut(chance_add_new_input,                       0.00001f, 0.0001f);
+        chance_remove_world_input          = mut(chance_remove_world_input,                  0.00001f, 0.0001f);
+        chance_remove_random_middle_neuron = mut(chance_remove_random_middle_neuron,         0.00001f, 0.0001f);
+        chance_remove_random_axon          = mut(chance_remove_random_axon,                  0.00001f, 0.0001f);
+        chance_add_any_new_connection      = mut(chance_add_any_new_connection,              0.00001f, 0.0001f);
+        chance_mutate_any_axon             = mut(chance_mutate_any_axon,                     0.00001f, 0.0001f);
+        // --
+        new_axon_initial_weight = mut(new_axon_initial_weight,                               0.00001f, 0.0001f);
+        axon_weight_mutation_range = mut(axon_weight_mutation_range,                         0.00001f, 0.0001f);
+        creature_color_mutation_range = mut(creature_color_mutation_range,                   0.00001f, 0.0001f);
+        // --
+    }
+    String get_printout() {
+        String result = "Brain Mutation Parameters:";
+        
+        // --
+        result += "\n    ichance_mutate_parameters:                              " + ichance_mutate_parameters;
+        // --
+        result += "\n    brain_size_multiplier_divider:                              " + brain_size_multiplier_divider;
+        // --
+        result += "\n    chance_bisect_any_connection:                         " + chance_bisect_any_connection;
+        result += "\n    chance_add_new_input:                                     " + chance_add_new_input;
+        result += "\n    chance_remove_world_input:                             " + chance_remove_world_input;
+        result += "\n    chance_remove_random_middle_neuron:         " + chance_remove_random_middle_neuron;
+        result += "\n    chance_remove_random_axon:                         " + chance_remove_random_axon;
+        result += "\n    chance_add_any_new_connection:                   " + chance_add_any_new_connection;
+        result += "\n    chance_mutate_any_axon:                                " + chance_mutate_any_axon;
+        // --
+        result += "\n    new_axon_initial_weight:                                    " + new_axon_initial_weight;
+        // --
+        result += "\n    axon_weight_mutation_range:                            " + axon_weight_mutation_range;
+        // --
+        result += "\n    creature_color_mutation_range:                         " + creature_color_mutation_range;
+        
+        return result;
+    }
+}
 class Neuron {
     int neuron_id;
     float current_data;

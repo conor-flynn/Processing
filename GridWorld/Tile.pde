@@ -25,8 +25,16 @@
             // ----
             creature = null;
             shouldRedraw = true;
+            
+            int recalculated = get_x_index() + (get_y_index() * Settings.NUM_TILES);
+            assert(recalculated == worldIndex);
         }
-        
+        int get_x_index() {
+            return (worldIndex - (worldIndex / Settings.NUM_TILES)*(Settings.NUM_TILES));   
+        }
+        int get_y_index() {
+            return (worldIndex / Settings.NUM_TILES);
+        }
         void draw() {
             if (FORCE_REDRAW || shouldRedraw) {
                 color c = color(
@@ -53,15 +61,15 @@
             return 0f;
         }
         float get_tile_evaluation_by_channel_of_creature(int index) {
-            if (creature == null) return 0f;
+            if (creature == null) return -0.5f;
             
             switch(index) {
                 case 0:
-                    return creature.red;
+                    return creature.red / 255.0f;
                 case 1:
-                    return creature.green;
+                    return creature.green / 255.0f;
                 case 2:
-                    return creature.blue;
+                    return creature.blue / 255.0f;
             }
             assert(false);
             return 0f;

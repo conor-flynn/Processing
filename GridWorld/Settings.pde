@@ -5,10 +5,14 @@
       
          // Game settings
              static final String WORLD_FILE_NAME = "world4.json";
-             static int TARGET_FRAME_RATE = 1000;
+             static int TARGET_FRAME_RATE = 30;
              static final float SCREEN_CLEAR_TIMER = 0f;
              static boolean DRAW_TILES = true;
              static boolean ALWAYS_REDRAW = false;
+             
+             static boolean DRAW_SIMULATION = true;
+             
+             static int TIME_PER_REPORT = 5;
              
       
          // World settings
@@ -24,24 +28,35 @@
              static final float BIOME_BLUR_RATE = 0.0;
          
          // Evolution settings
-             static final int NUM_SPECIES = 3;
+             static final int NUM_SPECIES = 5;
              static final int NUM_CREATURES_PER_SPECIES = 10;
              
-             static final float CREATURE_EAT_CREATURE_MULTIPLIER = 1.5f;
-             static final float CREATURE_EAT_PLANT_MULTIPLIER = 0.9f;
+             static final float CREATURE_EAT_CREATURE_MULTIPLIER = 1.0f;
+             static final float CREATURE_EAT_PLANT_MULTIPLIER = 1.2f;
+             static final float CREATURE_REPRODUCTIVE_INEFFICIENCY_MULTIPLIER = 1.05f;    // For every 1 food given to child, 1.1 food is subtracted from parent
              
-             static final float CREATURE_MINIMUM_MOVEMENT_THRESHOLD = 0.01f;
-             static final float CREATURE_MINIMUM_REPRODUCTIVE_THRESHOLD = 0.15f;
+             static final float CREATURE_MINIMUM_ACTION_THRESHOLD = 0.05f;
              
-             static final float FOOD_RESPAWN_TIME = 60f;
-             static final float CREATURE_STARVATION_TIMER = 120f;    //45
+             static final int FOOD_TRAMPLE_RECOVERY_AMOUNT = 10;
+             static final int CREATURE_FOOD_TRAMPLE_PER_FRAME = 0;
+             static final int FOOD_TRAMPLE_AMOUNT_MAX = (FOOD_TRAMPLE_RECOVERY_AMOUNT * 3);
+             
+             //static final float FOOD_RESPAWN_TIME = 165f;
+             static final float CREATURE_STARVATION_TIMER = 20f;    //45
              
              static final float CREATURE_BIRTH_FOOD = 1;
              static final float CREATURE_MAX_FOOD = 3;
              static final float FOOD_BIRTH_FOOD = 1;
              
-             static final float OVER_EAT_PUNISHMENT = 2.25f;
+             static final float OVER_EAT_PUNISHMENT = 1f;
              
              static final int CREATURE_REPRODUCTIVE_LIMIT = 3;
-             static final int CREATURE_DEATH_AGE = (int)(5 * CREATURE_STARVATION_TIMER);
+             static final int CREATURE_DEATH_AGE = (int)(10 * CREATURE_STARVATION_TIMER);
+             
+             static final float CREATURE_COLOR_MUTATION_AMOUNT = 0.45f;
+             
+             static final int CREATURE_COLOR_SIMILARITY_THRESHOLD = 15; // [0 - 255]
+             
+             
+             static final float CREATURE_MUTATION_RATE = 0.1f;
     }

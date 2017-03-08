@@ -1,13 +1,3 @@
-/*
-
-    Hilighting a species
-    Hilighting a creature
-      Hilighting similar colored creatures within the same species
-      
-      
-    Drawing a brain
-*/    
-
     class GUI {
       
         World world;
@@ -72,44 +62,61 @@
         
         void postDraw() {
             drawSpeciesInfo();
-            //drawSelectedCreature();
+            drawSelectedCreature();
+            noStroke();
         }
-        
+        void draw_world_connection(int dx, int dy, int ox, int oy, int type, int channel) {
+            // destination x, destination y, origin x, origin y, creature/tile, R G or B
+            Tile origin = world.get_tile_at_point(ox, oy);
+            assert(origin != null);
+            
+            float destx = world.get_tile_posx_by_index(dx);
+            float desty = world.get_tile_posy_by_index(dy);
+            
+            float originx = world.get_tile_posx_by_index(ox);
+            float originy = world.get_tile_posy_by_index(oy);
+            
+            println("(" + originx + "," + originy + ") --> (" + destx + "," + desty + ")");
+            println(origin.creature.life);
+            println(type);
+            println(channel);
+            
+            if (channel == 0) {
+                stroke(255,0,0);
+            } else if (channel == 1) {
+                stroke(0,255,0);
+            } else if (channel == 2) {
+                stroke(0,0,255);
+            }
+            if (type == 0) {
+                strokeWeight(6);   
+            } else {
+                strokeWeight(3);
+            }
+            line(originx, originy, destx, desty);
+        }
         void drawSelectedCreature() {
-            //if (creature == null) {
-            //    return; 
-            //}
-            //if (creature.markedForDeath) {
-            //    println("Creature leaving scope.");
-            //    creature = null;
-            //    return;
-            //}
-            
-            
-            //ArrayList<ArrayList<Float>> neurons = creature.brain.neurons;
-            //ArrayList<ArrayList<ArrayList<Float>>> axons = creature.brain.axons;
-            
-            //fill(255);
-            //textFont(font, 32);
-            //scale(1,-1);
-            //float x = -200;
-            //float y = 0;
-            //float y_delta = -35;
-            
-            //for (int layer = 0; layer < neurons.size(); layer++) {
-            //    ArrayList<Float> neuronLayer = neurons.get(layer);
-                
-            //    y = (-Settings.WORLD_WIDTH/2) - (y_delta * (neuronLayer.size()/2));
-            //    for (int neuron = 0; neuron < neuronLayer.size(); neuron++) {
-            //         float val = neuronLayer.get(neuron);
-            //         //val *= 10;
-            //         //val = (int)val;
-            //         //val /= 10;
-            //         text(val, x, y);
-            //         y += y_delta;
-            //    }
-            //    x -= 200;
-            //}
+            if (creature == null) {
+                return; 
+            }
+            if (creature.markedForDeath) {
+                println("Creature leaving scope.");
+                creature = null;
+                return;
+            }
+            println("...");
+            Brain brain = creature.brain;
+            ArrayList<Input> world_inputs = brain.world_inputs;
+            int xx = creature.tile.get_x_index();
+            int yy = creature.tile.get_y_index();
+            for (Input input : world_inputs) {
+                WorldConnection spot = input.connection;
+                int newx = spot.x + xx;
+                int newy = spot.y + yy;
+                int type = input.creature_or_tile;
+                int channel = input.channel;
+                draw_world_connection(newx, newy, xx, yy, type, channel);
+            }
         }
         
         void drawSpeciesInfo() {
@@ -118,16 +125,17 @@
             scale(1,-1);
             
             int species_index = -1;
-            int creature_index = -1;
             int global_max_gen = -1;
             
-            int xx = 0;//Settings.WORLD_WIDTH;
-            int yy = 24;//-Settings.WORLD_WIDTH;
+            int max_gen_index = -1;
             
-            int x0 = xx-10;
-            int y0 = yy-30;
-            int w0 = 650;
-            int h0 = 500 + (150 * (world.species.size()));
+            int xx = 5;//Settings.WORLD_WIDTH;
+            int yy = 34;//-Settings.WORLD_WIDTH;
+            
+            int x0 = xx-5;
+            int y0 = yy-35;
+            int w0 = 1000;
+            int h0 = 2500 + (150 * (world.species.size()));
             fill(255,0,0);
             rect(x0,y0,w0,h0);
             
@@ -137,13 +145,14 @@
                 int max_gen = -1;
                 int total_gen = 0;
                 float average_brain_size = 0;
+                global_max_gen = -1;
                 for (int j = 0; j < target.creatures.size(); j++) {
                     if (target.creatures.get(j).generation > max_gen) {
                        max_gen = target.creatures.get(j).generation;
                        if (max_gen > global_max_gen) {
                            global_max_gen = max_gen;
                            species_index = i;
-                           creature_index = j;
+                           max_gen_index = j;
                        }
                     }
                     total_gen += target.creatures.get(j).generation;
@@ -163,16 +172,24 @@
                 yy += 50;
                 text("---Average brain size : " + avr_brain_count, xx+50, yy);
                 yy += 50;
+                text(world.species.get(i).creatures.get(max_gen_index).brain.params.get_printout(), xx+50, yy);
+                yy += 640;
             }
             text("Frame rate : " + frameRate, xx, yy);
             yy += 50;
             text("Targe rate : " + Settings.TARGET_FRAME_RATE, xx, yy);
             yy += 50;
-            text("Generation : " + world.generation++, xx, yy);
+            text("Generation : " + world.generation, xx, yy);
             yy += 50;
             text("Plant Matter Consumed : " + world.plantMatterConsumed, xx, yy);
             yy += 50;
             text("Creature Matter Consumed : " + world.creatureMatterConsumed, xx, yy);
+            yy += 50;
+            text("Loss to resistance : " + world.lossToMovementResistance, xx, yy);
+            yy += 50;
+            text("Loss to reproductive inefficiency : " + world.lossToReproductiveInefficiency, xx, yy);
+            yy += 50;
+            text("Loss by aging : " + world.lossToLifeByAging, xx, yy);
             scale(1,-1);
             
             // +~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~
@@ -209,7 +226,7 @@
             PVector loc = mouseToWorld();
             
             if (loc.x < 0 || loc.x >= Settings.WORLD_WIDTH || loc.y < 0 || loc.y > Settings.WORLD_WIDTH) {
-                println("Searching for tile that is out of bounds.");
+                //println("Searching for tile that is out of bounds.");
                 return null;
             }
             
@@ -219,11 +236,11 @@
             int tile_index = x_index + (y_index * Settings.NUM_TILES);
             
             if (tile_index < 0 || tile_index >= (Settings.NUM_TILES * Settings.NUM_TILES)) {
-                println("Fatal: getTileFromMouse() returning illegal tile index.");
+                //println("Fatal: getTileFromMouse() returning illegal tile index.");
                 return null;
             }
             
-            println("Tile(" + x_index + "," + y_index + ")");
+            //println("Tile(" + x_index + "," + y_index + ")");
             Tile tile = world.tiles.get(tile_index);
             if (tile.creature != null) {
                 println("Creature(" + tile.creature.life + ")"); 
@@ -298,6 +315,20 @@
                 Settings.DRAW_TILES = !Settings.DRAW_TILES;
             } else if (key == 'd') {
                 Settings.ALWAYS_REDRAW = !Settings.ALWAYS_REDRAW;   
+            } else if (key == 't') {
+                Settings.DRAW_SIMULATION = !Settings.DRAW_SIMULATION;
+                if (Settings.DRAW_SIMULATION == false) {
+                    frameRate(99999);   
+                } else {
+                    frameRate(Settings.TARGET_FRAME_RATE);   
+                }
+            } else if (key == 'g') {
+                Settings.TIME_PER_REPORT += 1;
+                println("Time per report(" + Settings.TIME_PER_REPORT + ")");
+            } else if (key == 'h') {
+                Settings.TIME_PER_REPORT -= 1;
+                if (Settings.TIME_PER_REPORT < 1) Settings.TIME_PER_REPORT = 1;
+                println("Time per report(" + Settings.TIME_PER_REPORT + ")");
             }
         }
     }

@@ -9,11 +9,9 @@ class Creature {
     float life;
     int age;
     int generation;
-    boolean markedForDeath;
-    
-    float starting_life;
-    
+    boolean markedForDeath;    
     int reproductive_count;
+    
     
     
     public Creature(Species species) {
@@ -21,11 +19,9 @@ class Creature {
       
         markedForDeath = false;
         red = green = blue = -1;
-        
-        starting_life = 1;
           
         brain = null;
-        life = starting_life;
+        life = Settings.FOOD_BIRTH_FOOD;
         age = 0;
         generation = 0;
         
@@ -34,24 +30,45 @@ class Creature {
     }
     
     void killCreature() {
+        //assert(!markedForDeath);
         if (markedForDeath) return;
         markedForDeath = true;
         species.preGrave.add(this);
+        this.life = 0;
     }
+    float get_loss() {
+        float multiplier = (1f);// + (species.creatures.size() / 650f);
+        float amount = (1 / Settings.CREATURE_STARVATION_TIMER) * multiplier * (brain.brain_size_multiplier());
+        return amount;
+    }
+    boolean lose_standard_life() {
+        float amount = get_loss();
+        species.world.lossToLifeByAging += amount;
+        this.life -= amount;
+        if (this.life <= 0) {
+            killCreature();
+            return true;
+        }
+        return false;
+    }
+    
+    
+    
+    
+    
+    
+    
+    
     
     void update() {
         assert(tile != null);
         assert(brain != null);
         if (markedForDeath) return;
         
-        float multiplier = (1f) + (species.creatures.size() / 1000f);
-        this.life -= (1 / Settings.CREATURE_STARVATION_TIMER) * multiplier * (brain.brain_size_multiplier());
-        if (this.life <= 0) {
-            killCreature();
-            return;
-        }
+        if (lose_standard_life()) return;
+        
         age++;
-        if (reproductive_count > Settings.CREATURE_REPRODUCTIVE_LIMIT) {
+        if (reproductive_count >= Settings.CREATURE_REPRODUCTIVE_LIMIT) {
             killCreature();
             return;
         }
@@ -62,32 +79,243 @@ class Creature {
         
         brain.process();
         ArrayList<Float> results = brain.process_results;
-        if (results.size() != (3 + 2)) {
-        	return;   
-        }
-        float x = results.get(0);
-        float y = results.get(1);
-        float z = results.get(2);
-        if (z < -Settings.CREATURE_MINIMUM_REPRODUCTIVE_THRESHOLD) {
-            this.life += (1 / Settings.CREATURE_STARVATION_TIMER) * (0.25f);   
-        }
-        // TODO : If z is 0, then the creature shouldn't reproduce. It shou
+        assert(results.size() == (6+2));
         
-        if (abs(x) >= Settings.CREATURE_MINIMUM_MOVEMENT_THRESHOLD || abs(y) >= Settings.CREATURE_MINIMUM_MOVEMENT_THRESHOLD) {
-            tryMove(x,y);   
-        } else if (abs(z) >= Settings.CREATURE_MINIMUM_REPRODUCTIVE_THRESHOLD) {
-            tryReproduce();   
+        float mov_x = results.get(0);
+        float mov_y = results.get(1);
+        
+        float rep_x = results.get(2);
+        float rep_y = results.get(3);
+        
+        float kil_x = results.get(4);
+        float kil_y = results.get(5);
+        
+        boolean action = false;
+        boolean res = false;
+        
+        res = tryKill(kil_x, kil_y);
+        action = action || res;
+        if (markedForDeath) return;
+        res = tryReproduce(rep_x, rep_y);
+        action = action || res;
+        if (markedForDeath) return;
+        res = tryMove(mov_x, mov_y);
+        action = action || res;
+        if (markedForDeath) return;
+        //println(this.life + ": (" + mov_x + "," + mov_y + "), (" + rep_x + "," + rep_y + "), (" + kil_x + "," + kil_y + ")");
+        
+        if (!action && !markedForDeath) {
+            float amount = get_loss() * 0.85f;
+            species.world.lossToLifeByAging -= amount;
+            this.life += amount;
+            return;   
         }
     }
-    
-    float roundAway(float val) {
-        if (val < 0) {
-            return floor(val); 
+    void add_life(float amount) {
+        this.life += amount;
+        if (this.life > Settings.CREATURE_MAX_FOOD) {
+            float over = (this.life - Settings.CREATURE_MAX_FOOD);
+            over *= Settings.OVER_EAT_PUNISHMENT;
+            this.life = Settings.CREATURE_MAX_FOOD;
+            this.life -= over;
+        }
+        if (this.life > Settings.CREATURE_MAX_FOOD) {
+            println(this.life);
+            println(amount);
+        }
+        assert(this.life <= Settings.CREATURE_MAX_FOOD);
+        if (this.life < 0) {
+            killCreature();
+        }
+    }
+    boolean tryKill(float xx, float yy) {
+        if (markedForDeath) return false;
+        
+        
+        int x_tile = 0;
+        if (abs(xx) < Settings.CREATURE_MINIMUM_ACTION_THRESHOLD) {
+            x_tile = 0;
         } else {
-            return ceil(val);
+            x_tile = approx_to_exact(xx);
         }
+        int y_tile = 0;
+        if (abs(yy) < Settings.CREATURE_MINIMUM_ACTION_THRESHOLD) {
+            y_tile = 0;
+        } else {
+            y_tile = approx_to_exact(yy);
+        }
+        if (x_tile == 0 && y_tile == 0) return false;
+        x_tile += tile.get_x_index();
+        y_tile += tile.get_y_index();
+        
+        
+        
+        Tile target = species.world.get_tile_at_point(x_tile, y_tile);
+        if (this.tile == target) return true;
+        if (target == null || target.creature == null || target.creature.markedForDeath) {
+            return true;
+        }
+        
+        float steal = target.creature.life;
+        target.creature.killCreature();
+        add_life(steal * Settings.CREATURE_EAT_CREATURE_MULTIPLIER);
+        return true;
+    }
+    boolean tryReproduce(float xx, float yy) {
+        if (markedForDeath) return false;
+        
+        
+        int x_tile = 0;
+        if (abs(xx) < Settings.CREATURE_MINIMUM_ACTION_THRESHOLD) {
+            x_tile = 0;
+        } else {
+            x_tile = approx_to_exact(xx);
+        }
+        int y_tile = 0;
+        if (abs(yy) < Settings.CREATURE_MINIMUM_ACTION_THRESHOLD) {
+            y_tile = 0;
+        } else {
+            y_tile = approx_to_exact(yy);
+        }
+        if (x_tile == 0 && y_tile == 0) return false;
+        x_tile += tile.get_x_index();
+        y_tile += tile.get_y_index();
+        
+        
+        if (this.life < Settings.CREATURE_REPRODUCTIVE_INEFFICIENCY_MULTIPLIER) {
+            killCreature();
+            return false;
+        }
+        
+        
+        
+        Tile target = species.world.get_tile_at_point(x_tile, y_tile);
+        if (target == null || this.tile == target || target.creature != null) {
+            killCreature();
+            return true;
+        }
+        if (target instanceof Food) {
+            Food food = (Food)target;
+            if (food.edible) {
+                food.edible = false;
+                food.trampled = Settings.FOOD_TRAMPLE_RECOVERY_AMOUNT;
+                food.shouldRedraw = true;
+            }
+        }
+        
+        Creature newCreature = new Creature(species);
+            newCreature.brain = new Brain(brain, newCreature);
+            newCreature.copy_color(this);
+            newCreature.brain.mutate_count(1);
+            newCreature.tile = target;
+            newCreature.tile.creature = newCreature;     
+            newCreature.generation = generation+1;
+            newCreature.life = Settings.CREATURE_BIRTH_FOOD;
+        species.creatures.add(newCreature);
+        
+        add_life(-Settings.CREATURE_REPRODUCTIVE_INEFFICIENCY_MULTIPLIER);
+        reproductive_count++;
+        return true;
+    }
+    boolean tryMove(float xx, float yy) {
+        if (markedForDeath) return false;
+        
+        int x_tile = 0;
+        if (abs(xx) < Settings.CREATURE_MINIMUM_ACTION_THRESHOLD) {
+            x_tile = 0;
+        } else {
+            x_tile = approx_to_exact(xx);
+        }
+        int y_tile = 0;
+        if (abs(yy) < Settings.CREATURE_MINIMUM_ACTION_THRESHOLD) {
+            y_tile = 0;
+        } else {
+            y_tile = approx_to_exact(yy);
+        }
+        if (x_tile == 0 && y_tile == 0) return false;
+        x_tile += tile.get_x_index();
+        y_tile += tile.get_y_index();
+        
+        
+        Tile target = species.world.get_tile_at_point(x_tile, y_tile);
+        if (target == null) {
+            killCreature();
+            return false;
+        }
+        
+        if (target instanceof Food) {
+            Food food = (Food)target;
+            if (food.edible && (food.creature == null)) {
+                eat_food_at_empty_tile(target);
+                move_to_empty_tile(target);
+            } else if (food.creature != null) {
+                // What should we do???
+                // Consume extra energy, but get nothing in return?
+                food.creature.killCreature();
+                killCreature();
+                return true;
+            } else {
+                move_to_empty_tile(target);
+            }
+        } else {
+            if (target.creature == null) {
+                move_to_empty_tile(target);   
+            } else {
+                // What should we do???
+                // Consume extra energy, but get nothing in return?
+                target.creature.killCreature();
+                killCreature();
+                return true;
+            }
+        }
+        return true;
+    }
+    void move_to_empty_tile(Tile destination) {
+        
+        tile.creature = null;
+        tile.shouldRedraw = true;
+        this.life -= (tile.biome.movement_resistance);
+        
+        species.world.lossToMovementResistance += (tile.biome.movement_resistance);
+        
+        tile = destination;
+        tile.creature = this;  
+        tile.shouldRedraw = true;
+    }
+    void eat_food_at_empty_tile(Tile destination) {
+        Food food = (Food) destination;
+        
+        float amount = food.current_life;
+        assert(amount <= 1);
+        
+        amount *= Settings.CREATURE_EAT_PLANT_MULTIPLIER;
+        add_life(amount);
+        food.current_life = 0;
+        
+        food.trampled = Settings.FOOD_TRAMPLE_RECOVERY_AMOUNT;
+        food.edible = false;
     }
     
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+        
     float sig(float input) {
         float denom = 1 + exp(-input);
         return 1.0 / denom;
@@ -115,14 +343,14 @@ class Creature {
         green = target.green;
         blue = target.blue;
     }
-    void mutate_color() {
+    void mutate_color(float delta) {
         /*
         float delta = 2;
         float d1 = random(delta) - (delta/2);
         float d2 = random(delta) - (delta/2);
         float d3 = random(delta) - (delta/2);
         */
-        float val = 0.35f;
+        float val = delta;
         float d1 = random(-val, +val);
         float d2 = random(-val, +val);
         float d3 = random(-val, +val);
@@ -135,154 +363,32 @@ class Creature {
         green = clamp(green, 0, 255);
         blue = clamp(blue, 0, 255);
     }
+    int approx_to_exact(float val) {
+        return (int)roundAway(val);   
+    }
+    float roundAway(float val) {
+        if (val < 0) {
+            return floor(val); 
+        } else {
+            return ceil(val);
+        }
+    }
+    boolean similar_color(Creature target) {
+        float d_red = abs(target.red - red);
+        float d_green = abs(target.green - green);
+        float d_blue = abs(target.blue - blue);
+        
+        return (d_red + d_green + d_blue) > Settings.CREATURE_COLOR_SIMILARITY_THRESHOLD;
+    }
     
-    void tryReproduce() {
-        if (this.life < (Settings.CREATURE_BIRTH_FOOD*1.5f)) return;
-      
-        Tile openSpot = findReproductionTile();
-        if (openSpot == null) return;
-                
-        Creature newCreature = new Creature(species);
-            newCreature.brain = new Brain(brain, newCreature);
-            newCreature.copy_color(this);
-            newCreature.brain.mutate();
-            newCreature.tile = openSpot;
-            newCreature.tile.creature = newCreature;     
-            newCreature.generation = generation+1;
-        species.creatures.add(newCreature);
-        
-        newCreature.life = Settings.CREATURE_BIRTH_FOOD;
-        life -= newCreature.life;
-        if (life < 0) {
-            killCreature();
-            return;
-        }
-        reproductive_count++;
-    }
-    void move_to_empty_tile(Tile destination) {
-        
-        tile.creature = null;
-        tile.shouldRedraw = true;
-        this.life -= (tile.biome.movement_resistance);
-        
-        tile = destination;
-        tile.creature = this;  
-        tile.shouldRedraw = true;
-    }
-    void eat_creature_at_tile(Tile destination) {
-        if (destination.creature.markedForDeath) return;
-        if (destination.creature.life <= 0) return;
-           
-        float steal = destination.creature.life;
-        destination.creature.killCreature();
-        
-        steal *= Settings.CREATURE_EAT_CREATURE_MULTIPLIER;
-        life += steal;
-        
-        species.world.creatureMatterConsumed += steal;
-        if (life > Settings.CREATURE_MAX_FOOD) {
-            float over_eat = life - Settings.CREATURE_MAX_FOOD;
-            life = Settings.CREATURE_MAX_FOOD;
-            life -= (over_eat * Settings.OVER_EAT_PUNISHMENT);
-        }
-    }
-    void eat_food_at_empty_tile(Tile destination) {
-        Food food = (Food) destination;
-        
-        float amount = food.current_life;
-        
-        amount *= Settings.CREATURE_EAT_PLANT_MULTIPLIER;
-        life += amount;
-        
-        species.world.plantMatterConsumed += amount;
-        food.current_life = 0;
-        if (life > Settings.CREATURE_MAX_FOOD) {
-            float over_eat = life - Settings.CREATURE_MAX_FOOD;
-            life = Settings.CREATURE_MAX_FOOD;
-            life -= (over_eat * Settings.OVER_EAT_PUNISHMENT);
-        }
-        
-        tile.creature = null;
-        tile.shouldRedraw = true;
-        
-        tile = destination;
-        tile.creature = this;
-        tile.shouldRedraw = true;
-        
-        food.edible = false;
-    }
-    void eat_food_at_occupied_tile(Tile destination) {
-        Food food = (Food) destination;
-        if (food.creature.markedForDeath) return;
-        if (food.creature.life <= 0) return;
-        
-        float steal = food.creature.life;
-        food.creature.killCreature();
-        
-        steal *= Settings.CREATURE_EAT_CREATURE_MULTIPLIER;
-        life += steal;
-        
-        species.world.creatureMatterConsumed += steal;
-        if (life > Settings.CREATURE_MAX_FOOD) {
-            float over_eat = life - Settings.CREATURE_MAX_FOOD;
-            life = Settings.CREATURE_MAX_FOOD;
-            life -= (over_eat * Settings.OVER_EAT_PUNISHMENT);
-        }
-    }
-    void tryMove(float x, float y) {
-      
-        int xi = (int)roundAway(x);
-        int yi = (int)roundAway(y);
-        int direction = -1;
-        if (xi < 0) {
-           if (yi < 0) {
-               direction = Direction.SOUTHWEST.val();
-           } else if (yi == 0) {
-               direction = Direction.WEST.val();
-           } else if (yi > 0) {
-               direction = Direction.NORTHWEST.val();
-           }
-        } else if (xi == 0) {
-           if (yi < 0) {
-               direction = Direction.SOUTH.val();
-           } else if (yi == 0) {
-               return;
-           } else if (yi > 0) {
-               direction = Direction.NORTH.val();
-           }
-        } else if (xi > 0) {
-           if (yi < 0) {
-               direction = Direction.SOUTHEAST.val();
-           } else if (yi == 0) {
-               direction = Direction.EAST.val();
-           } else if (yi > 0) {
-               direction = Direction.NORTHEAST.val();
-           }
-        }
-        if (direction < 0) return;
-        
-        if (tile.neighbors.containsKey(direction)) {
-            Tile target = tile.neighbors.get(direction);
-            if (!(target instanceof Food)) {
-               if (target.creature == null) {
-                   move_to_empty_tile(target);
-               } else {
-                   eat_creature_at_tile(target);
-               }               
-            } else {
-                Food food = (Food)target;
-                if (food.edible && (food.creature == null)) {
-                    eat_food_at_empty_tile(target);                    
-                } else if (food.creature != null) {
-                    eat_food_at_occupied_tile(target);
-                } else {
-                    move_to_empty_tile(target);
-                }
-            }
-        } else { 
-            killCreature();
-        }
-    }
+    
+    
+    
+    
+    
+    
+    
+    
     
     void draw() {
       
