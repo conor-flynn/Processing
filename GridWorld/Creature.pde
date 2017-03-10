@@ -38,7 +38,7 @@ class Creature {
     }
     float get_loss() {
         float multiplier = (1f);// + (species.creatures.size() / 650f);
-        float amount = (1 / Settings.CREATURE_STARVATION_TIMER) * multiplier * (brain.brain_size_multiplier());
+        float amount = (1 / Settings.CREATURE_STARVATION_TIMER) * brain._brain_size_multiplier();
         return amount;
     }
     boolean lose_standard_life() {
@@ -50,6 +50,23 @@ class Creature {
             return true;
         }
         return false;
+    }
+    void add_life(float amount) {
+        this.life += amount;
+        if (this.life > Settings.CREATURE_MAX_FOOD) {
+            float over = (this.life - Settings.CREATURE_MAX_FOOD);
+            over *= Settings.OVER_EAT_PUNISHMENT;
+            this.life = Settings.CREATURE_MAX_FOOD;
+            this.life -= over;
+        }
+        if (this.life > Settings.CREATURE_MAX_FOOD) {
+            println(this.life);
+            println(amount);
+        }
+        assert(this.life <= Settings.CREATURE_MAX_FOOD);
+        if (this.life < 0) {
+            killCreature();
+        }
     }
     
     
@@ -109,23 +126,6 @@ class Creature {
             species.world.lossToLifeByAging -= amount;
             this.life += amount;
             return;   
-        }
-    }
-    void add_life(float amount) {
-        this.life += amount;
-        if (this.life > Settings.CREATURE_MAX_FOOD) {
-            float over = (this.life - Settings.CREATURE_MAX_FOOD);
-            over *= Settings.OVER_EAT_PUNISHMENT;
-            this.life = Settings.CREATURE_MAX_FOOD;
-            this.life -= over;
-        }
-        if (this.life > Settings.CREATURE_MAX_FOOD) {
-            println(this.life);
-            println(amount);
-        }
-        assert(this.life <= Settings.CREATURE_MAX_FOOD);
-        if (this.life < 0) {
-            killCreature();
         }
     }
     boolean tryKill(float xx, float yy) {
@@ -206,7 +206,12 @@ class Creature {
         Creature newCreature = new Creature(species);
             newCreature.brain = new Brain(brain, newCreature);
             newCreature.copy_color(this);
-            newCreature.brain.mutate_count(1);
+            
+        int size = (newCreature.brain.brain_size() + (int)random(0,50));
+        int mutation_count = 1 + (size / 100);
+        if (mutation_count > 3) mutation_count = 3;
+            
+            newCreature.brain.mutate_count(mutation_count);
             newCreature.tile = target;
             newCreature.tile.creature = newCreature;     
             newCreature.generation = generation+1;

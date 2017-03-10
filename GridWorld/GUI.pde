@@ -76,10 +76,12 @@
             float originx = world.get_tile_posx_by_index(ox);
             float originy = world.get_tile_posy_by_index(oy);
             
+            /*
             println("(" + originx + "," + originy + ") --> (" + destx + "," + desty + ")");
             println(origin.creature.life);
             println(type);
             println(channel);
+            */
             
             if (channel == 0) {
                 stroke(255,0,0);
@@ -100,11 +102,11 @@
                 return; 
             }
             if (creature.markedForDeath) {
-                println("Creature leaving scope.");
+                //println("Creature leaving scope.");
                 creature = null;
                 return;
             }
-            println("...");
+            //println("...");
             Brain brain = creature.brain;
             ArrayList<Input> world_inputs = brain.world_inputs;
             int xx = creature.tile.get_x_index();
@@ -223,30 +225,37 @@
         }
         
         Tile getTileFromMouse() {
-            PVector loc = mouseToWorld();
-            
+            PVector loc = mouseToWorld();            
             if (loc.x < 0 || loc.x >= Settings.WORLD_WIDTH || loc.y < 0 || loc.y > Settings.WORLD_WIDTH) {
                 //println("Searching for tile that is out of bounds.");
                 return null;
-            }
-            
+            }            
             int x_index = floor(loc.x / Settings.TILE_WIDTH);
             int y_index = floor(loc.y / Settings.TILE_WIDTH);
             
-            int tile_index = x_index + (y_index * Settings.NUM_TILES);
+            return world.get_tile_at_point(x_index, y_index);
+        }
+        Creature find_creature_near_tile(Tile target) {
+            assert(target != null);
             
-            if (tile_index < 0 || tile_index >= (Settings.NUM_TILES * Settings.NUM_TILES)) {
-                //println("Fatal: getTileFromMouse() returning illegal tile index.");
-                return null;
+            int xx = target.get_x_index();
+            int yy = target.get_y_index();
+            
+            int dist = 10;
+            for (int x = -dist; x <= dist; x++) {
+                for (int y = -dist; y <= dist; y++) {
+                    int newx = x + xx;
+                    int newy = y + yy;
+                    
+                    Tile spot = world.get_tile_at_point(newx, newy);
+                    if (spot != null && spot.creature != null) {
+                        return spot.creature;
+                    }
+                }
             }
             
-            //println("Tile(" + x_index + "," + y_index + ")");
-            Tile tile = world.tiles.get(tile_index);
-            if (tile.creature != null) {
-                println("Creature(" + tile.creature.life + ")"); 
-            }
             
-            return world.tiles.get(tile_index);
+            return null;
         }
         
         
@@ -258,15 +267,13 @@
         
         
         
-        
         void mousePressed() {
-            Tile target = getTileFromMouse();
-            if (target == null) {
-                return; 
-            } else {
-                creature = null; 
+            if (mouseButton == RIGHT) {
+                Tile target = getTileFromMouse();
+                if (target != null) {
+                    creature = find_creature_near_tile(target);
+                }
             }
-            if (target.creature != null) creature = target.creature;
         }
         
         void mouseDragged(MouseEvent event) {

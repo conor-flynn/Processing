@@ -86,30 +86,21 @@ class Brain {
         
         params = new Parameters();
         
-        for (int i = 0; i < 5; i++) {
-            add_new_input();   
+        for (int i = 0; i < 8; i++) {
+            add_new_input();
+            add_new_input();
+            add_new_connection_from_any_input();
+            add_new_connection_from_any_input();
+            bisect_any_connection();
+            add_any_new_connection();
+            add_any_new_connection();
         }
-        for (int i = 0; i < 20; i++) {
-            add_new_connection_from_any_input();   
-        }
-        for (int i = 0; i < 10; i++) {
-            bisect_any_connection();   
-        }
-        /*
-        for (int i = 0; i < 4; i++) {    // TODO : How many 'basic' neurons should be added?
-            bisect_any_connection();   
-        }
-        */
     }
     int brain_size() {
-        return (world_inputs.size()) + (worker_neurons.size());   
+        return (20*world_inputs.size()) + (worker_neurons.size());   
     }
-    float brain_size_multiplier() {
-        float counter = 0;
-        counter += (world_inputs.size());
-        counter += (worker_neurons.size());        
-        
-        return (1f + (counter / params.brain_size_multiplier_divider));
+    float _brain_size_multiplier() {        
+        return (1f + (brain_size() / params.brain_size_multiplier_divider));
     }
     void add_any_new_connection() {
         
@@ -132,7 +123,8 @@ class Brain {
         }
     }
     void mutate() {
-        if (random(1) > Settings.CREATURE_MUTATION_RATE) return;
+        
+        if (random(1) > 0.10f) return;
         //if (random(1) < params.ichance_mutate_parameters) params.mutate();
         
         if (random(1) < params.chance_bisect_any_connection) {
@@ -563,8 +555,8 @@ class Brain {
         }
         
         while (true) {
-            int new_x = ((int)(random(left_x-1, right_x+2)));
-            int new_y = ((int)(random(bot_y-1, top_y+2)));
+            int new_x = ((int)(random(left_x-2, right_x+2)));
+            int new_y = ((int)(random(bot_y-2, top_y+2)));
             WorldConnection new_connection = new WorldConnection(new_x, new_y);
             if (!currents.contains(new_connection)) {                
                 Input new_input = new Input();                
@@ -912,17 +904,17 @@ class Parameters {
     // --
     float ichance_mutate_parameters            = 1f;
     // --
-    int brain_size_multiplier_divider          = 4000;
+    int brain_size_multiplier_divider          = 2000;
     // --
     float brain_input_multiplier               = 1.0f;
     // --
     float chance_bisect_any_connection         = 0.10000f;    // adds 1 neuron, 1 connection
     float chance_add_new_input                 = 0.20000f;    // adds 1 neuron
-    float chance_remove_world_input            = 0.01000f;    // remove 1 neuron, and 'x' connections
-    float chance_remove_random_middle_neuron   = 0.01000f;    // remove 1 neuron, and 'x' + 'y' connections
+    float chance_remove_world_input            = 0.07000f;    // remove 1 neuron, and 'x' connections
+    float chance_remove_random_middle_neuron   = 0.03000f;    // remove 1 neuron, and 'x' + 'y' connections
     float chance_remove_random_axon            = 0.01000f;    // remove 1 connection
     float chance_add_any_new_connection        = 0.30000f;    // add 1 connection
-    float chance_mutate_any_axon               = 0.10000f;    // mutate connection
+    float chance_mutate_any_axon               = 0.20000f;    // mutate connection
     // --
     float new_axon_initial_weight              = 1f;
     // --

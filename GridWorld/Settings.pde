@@ -32,7 +32,7 @@
              static final int NUM_CREATURES_PER_SPECIES = 10;
              
              static final float CREATURE_EAT_CREATURE_MULTIPLIER = 1.0f;
-             static final float CREATURE_EAT_PLANT_MULTIPLIER = 1.2f;
+             static final float CREATURE_EAT_PLANT_MULTIPLIER = 0.75f;
              static final float CREATURE_REPRODUCTIVE_INEFFICIENCY_MULTIPLIER = 1.05f;    // For every 1 food given to child, 1.1 food is subtracted from parent
              
              static final float CREATURE_MINIMUM_ACTION_THRESHOLD = 0.05f;
@@ -42,13 +42,13 @@
              static final int FOOD_TRAMPLE_AMOUNT_MAX = (FOOD_TRAMPLE_RECOVERY_AMOUNT * 3);
              
              //static final float FOOD_RESPAWN_TIME = 165f;
-             static final float CREATURE_STARVATION_TIMER = 20f;    //45
+             static final float CREATURE_STARVATION_TIMER = 75f;    //45
              
              static final float CREATURE_BIRTH_FOOD = 1;
              static final float CREATURE_MAX_FOOD = 3;
              static final float FOOD_BIRTH_FOOD = 1;
              
-             static final float OVER_EAT_PUNISHMENT = 1f;
+             static final float OVER_EAT_PUNISHMENT = 0f;
              
              static final int CREATURE_REPRODUCTIVE_LIMIT = 3;
              static final int CREATURE_DEATH_AGE = (int)(10 * CREATURE_STARVATION_TIMER);

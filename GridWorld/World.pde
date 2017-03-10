@@ -301,6 +301,7 @@
             gui.mouseReleased(); 
         }
         void mouseDragged(MouseEvent event) {
+            if (mouseButton == RIGHT) return;
             FORCE_REDRAW = true;
             gui.mouseDragged(event); 
         }
