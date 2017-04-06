@@ -1,0 +1,180 @@
+{
+	"biomes" :
+		[
+			{
+				"name" : "Infertile Land",
+
+				"data" :
+					[
+						{
+							"life_time" : 1000,
+
+							"tile_color" : ["185", "122", "87"],
+							"tile_type" : ["1", "0"],
+
+							"food_color" : ["24", "131", "56"],
+							"food_type" : ["0", "0.05"],
+							"food_fertility" : 1,
+							"food_neighbors" : 0,
+							"food_respawn_time" : 200
+						}
+					]
+			},
+			{
+				"name" : "Grass Land",
+
+				"data" :
+					[
+						{
+							"life_time" : 1000,
+
+							"tile_color" : ["33", "177", "77"],
+							"tile_type" : ["1", "0"],
+
+							"food_color" : ["28", "255", "64"],
+							"food_type" : ["0", "0.125"],
+							"food_fertility" : 1,
+							"food_neighbors" : 4,
+							"food_respawn_time" : 120
+						}
+					]
+			},
+			{
+				"name" : "Rock Land",
+
+				"data" :
+					[
+						{
+							"life_time" : 1000,
+
+							"tile_color" : ["124", "78", "52"],
+							"tile_type" : ["0.75", "0"],
+
+							"food_color" : ["116", "149", "17"],
+							"food_type" : ["0.1", "0.125"],
+							"food_fertility" : 1,
+							"food_neighbors" : 1,
+							"food_respawn_time" : 150
+						}
+					]
+			},
+			{
+				"name" : "Forest Land",
+
+				"data" :
+					[
+						{
+							"life_time" : 1000,
+
+							"tile_color" : ["149", "173", "99"],
+							"tile_type" : ["0.9", "0"],
+
+							"food_color" : ["57", "230", "43"],
+							"food_type" : ["0", "0.25"],
+							"food_fertility" : 1,
+							"food_neighbors" : 6,
+							"food_respawn_time" : 90
+						}
+					]
+			},
+			{
+				"name" : "Water 1",
+
+				"data" :
+					[
+						{
+							"life_time" : 1000,
+
+							"tile_color" : ["153", "217", "234"],
+							"tile_type" : ["1", "0.5"],
+
+							"food_color" : ["164", "223", "185"],
+							"food_type" : ["1", "1"],
+							"food_fertility" : 1,
+							"food_neighbors" : 3,
+							"food_respawn_time" : 40
+						}
+					]
+			},
+			{
+				"name" : "Water 2",
+
+				"data" :
+					[
+						{
+							"life_time" : 1000,
+
+							"tile_color" : ["0", "162", "232"],
+							"tile_type" : ["1", "1"],
+
+							"food_color" : ["0", "0", "0"],
+							"food_type" : ["0", "0"],
+							"food_fertility" : 0,
+							"food_neighbors" : -1,
+							"food_respawn_time" : -1
+						}
+					]
+			},
+			{
+				"name" : "Water 3",
+
+				"data" :
+					[
+						{
+							"life_time" : 1000,
+
+							"tile_color" : ["35", "111", "156"],
+							"tile_type" : ["1", "1"],
+
+							"food_color" : ["0", "0", "0"],
+							"food_type" : ["0", "0"],
+							"food_fertility" : 0,
+							"food_neighbors" : -1,
+							"food_respawn_time" : -1
+						}
+					]
+			}
+		],
+	"groups" :
+		[
+			{
+				"key" : ["185","122","87"],
+
+				"biomes" : 
+					[
+						{"name": "Water 1", "chance" : 0.125},
+						{"name": "Water 2", "chance" : 0.125},
+						{"name": "Water 3", "chance" : 0.750}
+					]
+			},
+			{
+				"key" : ["0","255","0"],
+
+				"biomes" : 
+					[
+						{"name": "Forest Land", "chance" : 0.9},
+						{"name": "Grass Land", "chance" : 0.1}
+					]
+			},
+			{
+				"key" : ["255","0","0"],
+
+				"biomes" : 
+					[
+						{"name": "Grass Land", "chance" : 0.99},
+						{"name": "Infertile Land", "chance" : 0.005},
+						{"name": "Rock Land", "chance" : 0.005}
+					]
+			},
+			{
+				"key" : ["0","0","255"],
+
+				"biomes" : 
+					[
+						{"name": "Forest Land", "chance" : 0.70},
+						{"name": "Grass Land", "chance" : 0.25},
+						{"name": "Rock Land", "chance" : 0.05}
+					]
+			}
+		]
+}

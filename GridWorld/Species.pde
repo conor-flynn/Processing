@@ -10,10 +10,10 @@ class Species {
     public Species(World world, int numCreatures, ArrayList<Integer> creatureSpawns) {  
         this.world = world;
         this.numCreatures = numCreatures;
-        this.creatureSpawns = new ArrayList<Integer>(creatureSpawns);
+        this.creatureSpawns = null;//new ArrayList<Integer>(creatureSpawns);
                 
         if (this.numCreatures <= 0) println("No creatures");
-        if (this.creatureSpawns.size() <= 0) println("No spawns");
+        //if (this.creatureSpawns.size() <= 0) println("No spawns");
         
         for (int i = 0; i < numCreatures; i++) {
             spawnCreature();
@@ -25,18 +25,32 @@ class Species {
         if (tile == null) return;
         
         Creature creature = new Creature(this);
-        if (creature == null) return;
         
-        tile.creature = creature;
+        tile.creatureEntering(creature);
+        
         creature.brain = new Brain(creature);
-        creature.tile = tile;
+        
         creature.red = random(255);
         creature.green = random(255);
         creature.blue = random(255);
+        
+        creature.life = Settings.CREATURE_BIRTH_FOOD;
+        
         creatures.add(creature); 
     }
     
     Tile findCreatureSpawn() {
+        for (int i = 0; i < 30; i++) {
+            int x_index = floor(random(0, Settings.NUM_TILES));
+            int y_index = floor(random(0, Settings.NUM_TILES));
+            Tile target = world.get_tile_at_point(x_index, y_index);
+            
+            assert(target != null);
+            
+            if (target.creature == null) return target;
+        }
+        return null;
+        /*
         Set<Integer> points = new HashSet<Integer>();
         do {
           
@@ -52,13 +66,12 @@ class Species {
             points.add(index);
             
             Tile tile = world.tiles.get(index);
-            boolean noCreature = (tile.creature == null);
-            boolean notFood = !(tile instanceof Food);
             
-            if (noCreature && notFood) {
+            if (tile.creature == null) {
                 return tile;
             }
         } while (true);
+        */
     }
     
     
@@ -69,14 +82,12 @@ class Species {
     
     void update() {
         for (int i = 0; i < creatures.size(); i++) {
-           creatures.get(i).update();
+            creatures.get(i).update();
         }
         while (preGrave.size() > 0) {
            Creature target = preGrave.get(0);
            target.tile.shouldRedraw = true;
            target.tile.creature = null;
-           //world.tiles.get(target.tile.worldIndex).shouldRedraw = true;
-           //world.tiles.get(target.tile.worldIndex).creature = null;
            boolean deleted = false;
            for (int i = 0; i < creatures.size(); i++) {
               if (creatures.get(i) == target) {
@@ -85,26 +96,31 @@ class Species {
                  break;
               }
            }
-           if (!deleted) {
-               println("Couldn't kill.");
-           }
+           assert(deleted == true);
            preGrave.remove(0);
         }
-        while (creatures.size() < numCreatures) {
-           spawnCreature(); 
+        for (int i = 0; i < (numCreatures-creatures.size()); i++) {
+            spawnCreature();
         }
     }
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     
     void draw(){
         for (int i = 0; i < creatures.size(); i++) {
            creatures.get(i).draw(); 
         }
     }
-    
-    
-    
-    
-    
-    
-    
 }

@@ -3,30 +3,36 @@
     import java.util.*;
     class World {        
         GUI gui;
-        long plantMatterConsumed = 0;
-        long creatureMatterConsumed = 0;
-        float lossToMovementResistance = 0;
-        float lossToReproductiveInefficiency = 0;
-        float lossToLifeByAging = 0;
+        double plantMatterConsumed = 0;
+        double creatureMatterConsumed = 0;
+        long asexual_reproduction = 0;
+        long sexual_reproduction = 0;
       
         ArrayList<Tile> tiles = new ArrayList<Tile>();
+        Tile youngest_tile = null;
+        Tile oldest_tile = null;
+        int num_tiles_in_queue = 0;
+        
         HashMap<String, Biome> biomes = new HashMap<String, Biome>();
+        HashMap<Color, BiomeGroup> biome_spawner = new HashMap<Color, BiomeGroup>();
         
         int generation = 0;
         
         ArrayList<Species> species = new ArrayList<Species>();
-        ArrayList<Food> foods = new ArrayList<Food>();
         
         ArrayList<Integer> creatureSpawns = new ArrayList<Integer>();
-        ArrayList<Integer> foodSpawns = new ArrayList<Integer>();
         
+        int neuron_counter = 14;
+        int gene_counter = 0;
+        //HashMap<Integer, HashMap<Integer, Integer>> gene_library = new HashMap<Integer, HashMap<Integer, Integer>>();
         
         
         public World() {
             gui = new GUI(this);
             frameRate(Settings.TARGET_FRAME_RATE);
-            loadFromFile(Settings.WORLD_FILE_NAME);
+            loadFromFile(Settings.WORLD_BIOME_DESCRIPTIONS, Settings.WORLD_TILE_DESCRIPTIONS);
             
+            /*
             int x0, y0, w, h;
             ArrayList<Integer> spawn0 = new ArrayList<Integer>();
             x0 = 0;
@@ -39,8 +45,9 @@
                     spawn0.add(index);
                 }
             }
+            */
             for (int i = 0; i < Settings.NUM_SPECIES; i++) {
-                this.species.add(new Species(this, Settings.NUM_CREATURES_PER_SPECIES, spawn0));
+                this.species.add(new Species(this, Settings.NUM_CREATURES_PER_SPECIES, null));
             }            
         }
         float get_tile_posx_by_index(int x) {
@@ -54,9 +61,9 @@
         float get_tile_posy_by_index(int y) {
             float tile_size = Settings.TILE_WIDTH;
             if (y > 0) {
-                return (tile_size / 2f) + (tile_size * y);
+                return (Settings.NUM_TILES*Settings.TILE_WIDTH) - ((tile_size / 2f) + (tile_size * y));
             } else {
-                return (-tile_size / 2f) - (tile_size * y);   
+                return (Settings.NUM_TILES*Settings.TILE_WIDTH) - ((-tile_size / 2f) - (tile_size * y));   
             }
         }
         Tile get_tile_at_point(int x, int y) {
@@ -68,44 +75,125 @@
             
             return tiles.get(index);
         }
-        public void loadFromFile(String filename) {
+        void load_biome_descriptions(String file_name) {
+            println(file_name);
+            JSONObject file = loadJSONObject(file_name);
+            JSONArray biomes_aray = file.getJSONArray("biomes");
+            JSONArray biome_groups_array = file.getJSONArray("groups");
+            {
+                // Iterate through each biome
+                for (int biomeIndex = 0; biomeIndex < biomes_aray.size(); biomeIndex++) {
+                    JSONObject particular_biome = biomes_aray.getJSONObject(biomeIndex);
+                    
+                    String name = particular_biome.getString("name");
+                        assert(name.length() > 0);
+                    JSONArray cycle_data = particular_biome.getJSONArray("data");
+                   
+                    Biome biome = new Biome(name, cycle_data.size());
+                    for (int cycle = 0; cycle < cycle_data.size(); cycle++) {
+                        
+                        JSONObject particular_cycle = cycle_data.getJSONObject(cycle);
+                        
+                        biome.set_life_time(
+                                    particular_cycle.getInt("life_time"), cycle);
+                        biome.set_tile_color(
+                                    particular_cycle.getJSONArray("tile_color").getStringArray(), cycle);
+                        biome.set_tile_type(
+                                    particular_cycle.getJSONArray("tile_type").getStringArray(), cycle);
+                        biome.set_food_color(
+                                    particular_cycle.getJSONArray("food_color").getStringArray(), cycle);
+                        biome.set_food_type(
+                                    particular_cycle.getJSONArray("food_type").getStringArray(), cycle);
+                        biome.set_food_fertility(
+                                    particular_cycle.getFloat("food_fertility"), cycle);
+                        biome.set_food_neighbors(
+                                    particular_cycle.getInt("food_neighbors"), cycle);
+                        biome.set_food_respawn_time(
+                                    particular_cycle.getInt("food_respawn_time"), cycle);
+                    }
+                    biomes.put(name, biome);
+                }
+                update_biomes();
+            }
+            // All biome data is loaded
+            // Now process data from biome_groups_array
+            {
+                for (int index = 0; index < biome_groups_array.size(); index++) {
+                    JSONObject particular_group = biome_groups_array.getJSONObject(index);
+                    
+                    int color_data[] = converti(particular_group.getJSONArray("key").getStringArray());
+                    color kkey = color(color_data[0], color_data[1], color_data[2]);
+                    
+                    JSONArray biome_links = particular_group.getJSONArray("biomes");
+                    BiomeGroup new_group = new BiomeGroup();
+                    for (int i = 0; i < biome_links.size(); i++) {
+                        JSONObject description = biome_links.getJSONObject(i);
+                        new_group.links.put(biomes.get(description.getString("name")), description.getFloat("chance"));
+                    }
+                    assert(new_group != null);
+                    assert(new_group.links.size() > 0);
+                    biome_spawner.put(new Color(kkey), new_group);
+                }
+            }
+        }
+        void load_tiles_from_image(String file_name) {
+            PImage source = loadImage(file_name);
+            assert(source.width == source.height);
+            Settings.NUM_TILES = source.width;
+            PVector tileOffset = new PVector(Settings.TILE_WIDTH/2, Settings.TILE_WIDTH/2);
+            
+            for (int y = 0; y < source.height; y++) {
+                for (int x = 0; x < source.width; x++) {
+                    color col = source.get(x,y);
+                    Color kkey = new Color(col);
+                    if (biome_spawner.get(kkey) == null) {
+                        println("Can't find color : " + kkey.get_print());
+                        
+                        println("Column : " + x);
+                        println("Row : " + y);
+                    }
+                    Biome biome = biome_spawner.get(kkey).get_random_biome();
+                    
+                    int xx = (int)((x*Settings.TILE_WIDTH) + tileOffset.x);
+                    int yy = (int)(((Settings.NUM_TILES-y)*Settings.TILE_WIDTH) + tileOffset.y);
+                    int ww = Settings.TILE_WIDTH - 2;
+                    int index = x + (y * Settings.NUM_TILES);
+                    
+                    tiles.add(buildTileFromFile(biome, xx,yy,ww,index));
+                }
+            }
+            /*
+            for (int i = 0; i < tiles.size(); i++) {
+                Tile target = tiles.get(i);
+                assert(target.worldIndex == i);
+            }
+            */
+            for (Tile tile : tiles) {
+                tile.load_neighbors();
+            }
+            for (Tile tile : tiles) {
+                if (random(1) > 0.6f) tile.try_respawn(true);
+            }
+        }
+        public void loadFromFile(String biome_descriptions, String tile_descriptions) {
+            load_biome_descriptions(biome_descriptions);
+            // All biomes are loaded from file and updated (updated: tiles can properly reference this biome)
+            // All <V3, BiomeGroup> have been loaded
+            load_tiles_from_image(tile_descriptions);
+            /*
             JSONObject worldData = loadJSONObject(filename);
             JSONArray biomesData  = worldData.getJSONArray("biomes");
             JSONArray tileData   = worldData.getJSONArray("tiles");
             
-            for (int biomeIndex = 0; biomeIndex < biomesData.size(); biomeIndex++) {
-                JSONObject biomeData = biomesData.getJSONObject(biomeIndex);
-                
-                String label = biomeData.getString("label");
-                if (label.length() > 2) {
-                    println("World data : Labels must be 2 characters.");
-                    return;
-                }        
-                Biome biome = new Biome(
-                                label, 
-                                
-                                biomeData.getFloat("color_red"), 
-                                biomeData.getFloat("color_green"), 
-                                biomeData.getFloat("color_blue"),
-                                
-                                biomeData.getFloat("tiles_per_creature"),
-                                //biomeData.getFloat("food_spawn_percentage"),
-                                //biomeData.getFloat("food_energy_amount"),
-                                //biomeData.getFloat("food_energy_growth_amount"),
-                                
-                                biomeData.getFloat("movement_resistance"),
-                                
-                                biomeData.getFloat("food_intensity"),
-                                biomeData.getFloat("tile_intensity"));
-                biomes.put(label, biome);
-            }
+            
             int num_rows = tileData.size();
-            int num_columns = tileData.getString(0).length()/2;
             Settings.NUM_TILES = num_rows;
             Settings.WORLD_WIDTH = Settings.NUM_TILES * Settings.TILE_WIDTH;
             for (int rowIndex = 0; rowIndex < tileData.size(); rowIndex++) {
                 if (tileData.getString(rowIndex).length()/2 != num_rows) {
-                    println("The world needs to be perfect square."); 
+                    println("Row count : " + tileData.size());
+                    println("Column count : " + tileData.getString(rowIndex).length()/2);
+                    assert(false); 
                 } 
                 
             }
@@ -135,122 +223,102 @@
                     tiles.add(buildTileFromFile(target, x, y, w, index));
                 }
             }
-            
-            for (int i = 0; i < tiles.size(); i++) {
-                addNeighbors(tiles.get(i), i); 
+            for (Tile tile : tiles) {
+                tile.load_neighbors();
             }
-            
-            ArrayList<Integer> tempList = new ArrayList<Integer>(tiles.size());
-            for (int i = 0; i < tiles.size(); i++) { 
-                tempList.add(i);
+            for (Tile tile : tiles) {
+                if (random(1) > 0.6f) tile.try_respawn(true);
             }
-            ArrayList<Integer> blurList = new ArrayList<Integer>(tiles.size());
-            for (int i = 0; i < tiles.size(); i++) {
-                int index = (int)random(0, tempList.size());
-                Integer target = tempList.get(index);
-                tempList.remove(index);
-                blurList.add(target);
-            }
-            for (Integer i : blurList) {
-                if (random(1) < Settings.BIOME_BLUR_RATE) {
-                     Tile self = tiles.get(i);
-                     Biome newBiome = null;
-                     for (Map.Entry me : self.neighbors.entrySet()) {
-                         Biome target = ((Tile)me.getValue()).biome;
-                         if (self.biome != target) {
-                             newBiome = target; 
-                         }
-                     }
-                     if (newBiome != null) {
-                         tiles.get(i).biome = newBiome; 
-                     }
-                }
-            }
+            */
         }
-        
         Tile buildTileFromFile(Biome target, int x, int y, int w, int index) {
-             float chance = (1f / target.tiles_per_creature);
-             if (random(1) < chance) {
-                 Food f = new Food(x, y, w, index, target);
-                 return f;
-             } else {
-                 Tile t = new Tile(x, y, w, index, target);
-                 return t;
-             }
+             Tile t = new Tile(x, y, w, index, target, this);
+             return t;
         }
         
-        HashMap<Integer, Integer> getValidNeighbors(int index) {
-            HashMap<Integer, Integer> dirs = new HashMap<Integer, Integer>();
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        HashMap<Creature, Creature> attempt_parents = new HashMap<Creature, Creature>();
+        HashMap<Creature, Creature> parents = new HashMap<Creature, Creature>();
+        void tryToSexuallyReproduce(Creature source, Creature target) {
+            if (source.markedForDeath || target.markedForDeath) return;
             
-            int n  = +Settings.NUM_TILES  + index;
-            int ne = n+1;
-            int nw = n-1;
-            int s  = -Settings.NUM_TILES + index;
-            int se = s+1;
-            int sw = s-1;
-            int e  = +1 + index;
-            int w  = -1 + index;
-            
-            if (index < Settings.NUM_TILES) {
-                s = se = sw = -1;
+            if (attempt_parents.get(source) == target) {
+                parents.put(source, target);
+            } else {
+                attempt_parents.put(target, source);   
             }
-            if (index >= ((Settings.NUM_TILES*Settings.NUM_TILES)-Settings.NUM_TILES)) {
-                n = ne = nw = -1;
-            }
-            if (index % Settings.NUM_TILES == 0) {
-                nw = sw = w = -1;
-            }
-            if ((index+1) % Settings.NUM_TILES == 0) {
-                ne = se = e = -1;
-            }
-            // This ordering has to match the Direction enum
-            int[] indices = {n, ne, nw, s, se, sw, e, w};
-            for (int i = 0; i < indices.length; i++) {
-                int val = indices[i];
-                if (validIndex(val)) {
-                    dirs.put(i, val);
+        }
+        void manage_reproduction() {
+            for (Map.Entry me : parents.entrySet()) {
+                Creature source = (Creature)me.getKey();
+                Creature target = (Creature)me.getValue();
+                
+                if (
+                    source.life <= Settings.CREATURE_SEXUAL_REPRODUCTION_COST || 
+                    target.life <= Settings.CREATURE_SEXUAL_REPRODUCTION_COST) 
+                {
+                    continue;
                 }
+                
+                source.cross_with(target);
             }
-            return dirs;
+            attempt_parents.clear();
+            parents.clear();
         }
         
-        void addNeighbors(Tile tile, int index) {
-            HashMap<Integer, Integer> valid = getValidNeighbors(index);
-            for (Map.Entry me : valid.entrySet()) {
-                int k = (int)me.getKey();
-                int v = (int)me.getValue();
-                tile.neighbors.put(k, tiles.get(v));
-            }
-        }
         
-        boolean validIndex(int i) {
-            if (i < 0) return false;
-            if (i >= tiles.size()) return false;
-            return true;
-        }
+        
+        
         
         void preDraw() {
             if (Settings.DRAW_SIMULATION) gui.preDraw(); 
         }
         void draw() {
             noStroke();
-            if (Settings.DRAW_SIMULATION && Settings.DRAW_TILES) {
+            update_biomes();
+            manage_tile_respawn();
+            for (int i = 0; i < species.size(); i++) {
+                species.get(i).update();
+            }
+            manage_reproduction();
+            if (Settings.DRAW_SIMULATION) {
                 for (int i = 0; i < tiles.size(); i++) {
-                    tiles.get(i).update();
                     tiles.get(i).draw();
                 }
-            } else {
-                for (int i = 0; i < tiles.size(); i++) {
-                    tiles.get(i).update();
-                }   
-            }
-                   
-            for (int i = 0; i < species.size(); i++) {
-               species.get(i).update(); 
-            }
-            if (Settings.DRAW_SIMULATION) {
                 for (int i = 0; i < species.size(); i++) {
-                   species.get(i).draw();
+                    species.get(i).draw();
                 }
             }
         }
@@ -258,41 +326,25 @@
             generation++;
             if (Settings.DRAW_SIMULATION) gui.postDraw(); 
         }
-        
-        Tile findFoodSpawn() {
-            Set<Integer> points = new HashSet<Integer>();
-            do {
-              
-                if (points.size() == foodSpawns.size()) {
-                    println("No food spawn location open.");
-                    return null;
-                }
-              
-                int choice = (int) random(foodSpawns.size());
-                int index = foodSpawns.get(choice);
-                if (points.contains(index)) continue;
-                
-                points.add(index);
-                
-                Tile tile = tiles.get(index);
-                boolean noCreature = (tile.creature == null);
-                boolean notFood = !(tile instanceof Food);
-                
-                if (noCreature && notFood) {
-                    return tile;
-                }
-            } while (true);
-        }
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         void mouseWheel(MouseEvent event) {
             FORCE_REDRAW = true;
             gui.mouseWheel(event); 
@@ -311,21 +363,182 @@
         void mousePressed() {
             gui.mousePressed();
         }
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        int getNextNeuronID() {
+            return neuron_counter++;
+        }
+        int getNextGeneID() {
+            return gene_counter++;
+        }
+        void update_biomes() {
+            for (Map.Entry me : biomes.entrySet()) {
+                Biome biome = (Biome)me.getValue();
+                biome.update();
+            }
+        }
+        void add_tile_to_queue(Tile guy) {
+            num_tiles_in_queue++;
+            guy.isRespawning = true;
+            if (youngest_tile == null) {
+            
+                // Case: there is no chain that exists
+                
+                youngest_tile = guy;
+                youngest_tile.younger_tile = null;
+                youngest_tile.older_tile = null;
+                
+                return;
+            } else if (oldest_tile == null) {
+                
+                // Case: there is a chain of 1 item
+                
+                if (youngest_tile.respawn_frame <= guy.respawn_frame) {
+                
+                    // Case:
+                        // There was only a 'youngest_tile'. 
+                        // The new link should go after the 'youngest_tile'
+                
+                    oldest_tile = guy;
+                    
+                    youngest_tile.older_tile = oldest_tile;
+                    youngest_tile.older_tile.younger_tile = youngest_tile;
+                    youngest_tile.older_tile.older_tile = null;
+                    
+                    return;
+                } else {
+                
+                    // Case:
+                        // There was only a 'youngest_tile'. 
+                        // The new link should go before the 'youngest_tile'
+                
+                    oldest_tile = youngest_tile;
+                    youngest_tile = guy;
+                    
+                    youngest_tile.younger_tile = null;
+                    youngest_tile.older_tile = oldest_tile;
+                    youngest_tile.older_tile.younger_tile = youngest_tile;
+                    youngest_tile.older_tile.older_tile = null;
+                    
+                    return;
+                }
+            }
+            if (oldest_tile.respawn_frame <= guy.respawn_frame) {
+            
+                // Case:
+                    // The new link should be added to the end of the chain
+            
+                guy.younger_tile = oldest_tile;
+                guy.younger_tile.older_tile = guy;
+                
+                oldest_tile = guy;
+                
+                return;
+                
+            } else {
+            
+                // Case:
+                    // The respawn time is less than the oldest tile, 
+                    // so it has to be inserted somewhere into the chain
+                    
+                Tile worker = oldest_tile;
+                
+                while (true) {
+                
+                    worker = worker.younger_tile;
+                    if (worker == null) {
+                        
+                        // Case: worker is null, 'guy' should be inserted in front of the youngest tile
+                        
+                        guy.younger_tile = null;
+                        guy.older_tile = youngest_tile;
+                        guy.older_tile.younger_tile = guy;
+                        
+                        youngest_tile = guy;
+                        
+                        return;
+                    }
+                    
+                    if (worker.respawn_frame <= guy.respawn_frame) {
+                        
+                        // Case: Adding somewhere in the middle of the chain
+                        
+                        assert(worker != oldest_tile);
+                        
+                        guy.younger_tile = worker;
+                        guy.older_tile = worker.older_tile;
+                        
+                        guy.younger_tile.older_tile = guy;
+                        guy.older_tile.younger_tile = guy;
+                        
+                        return;
+                    
+                    }
+                }
+            }
+        }
+        void respawn_tile(Tile target) {
+            target.isFood = true;
+            target.isRespawning = false;
+            target.shouldRedraw = true;
+            num_tiles_in_queue--;
+        }
+        void manage_tile_respawn() {
+            if (youngest_tile == null) return;
+            
+            /*
+            if (youngest_tile != null) {
+                println((youngest_tile.respawn_frame - this.generation));
+            }
+            */
+            
+            while(youngest_tile != null && (youngest_tile.respawn_frame <= this.generation)) {
+                respawn_tile(youngest_tile);
+                
+                if (youngest_tile.older_tile == null) {
+                
+                    // Case: respawned the youngest_tile, and there is ONLY a youngest_tile.
+                    
+                    youngest_tile = null;
+                    
+                    return;
+                    
+                } else if (youngest_tile.older_tile == oldest_tile) {
+                
+                    // Case: There are only two tiles. Clear the first one, and replace it with the second one.
+                    
+                    youngest_tile = oldest_tile;
+                    youngest_tile.younger_tile = null;
+                    youngest_tile.older_tile = null;
+                    oldest_tile = null;
+                    
+                } else {
+                
+                    // Case: Remove the youngest_tile and increment the chain
+                
+                    youngest_tile = youngest_tile.older_tile;
+                    youngest_tile.younger_tile = null;
+                    
+                }
+            }
+        }
     }
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+
     
     
     

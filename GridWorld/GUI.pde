@@ -62,10 +62,11 @@
         
         void postDraw() {
             drawSpeciesInfo();
-            drawSelectedCreature();
+            //drawSelectedCreature();
             noStroke();
         }
-        void draw_world_connection(int dx, int dy, int ox, int oy, int type, int channel) {
+        /*
+        void draw_world_connection(int dx, int dy, int ox, int oy, int channel) {
             // destination x, destination y, origin x, origin y, creature/tile, R G or B
             Tile origin = world.get_tile_at_point(ox, oy);
             assert(origin != null);
@@ -75,13 +76,6 @@
             
             float originx = world.get_tile_posx_by_index(ox);
             float originy = world.get_tile_posy_by_index(oy);
-            
-            /*
-            println("(" + originx + "," + originy + ") --> (" + destx + "," + desty + ")");
-            println(origin.creature.life);
-            println(type);
-            println(channel);
-            */
             
             if (channel == 0) {
                 stroke(255,0,0);
@@ -97,6 +91,8 @@
             }
             line(originx, originy, destx, desty);
         }
+        */
+        /*
         void drawSelectedCreature() {
             if (creature == null) {
                 return; 
@@ -115,12 +111,11 @@
                 WorldConnection spot = input.connection;
                 int newx = spot.x + xx;
                 int newy = spot.y + yy;
-                int type = input.creature_or_tile;
                 int channel = input.channel;
-                draw_world_connection(newx, newy, xx, yy, type, channel);
+                draw_world_connection(newx, newy, xx, yy, channel);
             }
         }
-        
+        */
         void drawSpeciesInfo() {
             fill(255);
             textFont(font, 32);
@@ -147,6 +142,7 @@
                 int max_gen = -1;
                 int total_gen = 0;
                 float average_brain_size = 0;
+                float average_axon_size = 0;
                 global_max_gen = -1;
                 for (int j = 0; j < target.creatures.size(); j++) {
                     if (target.creatures.get(j).generation > max_gen) {
@@ -159,13 +155,16 @@
                     }
                     total_gen += target.creatures.get(j).generation;
                     average_brain_size += target.creatures.get(j).brain.brain_size();
+                    average_axon_size += target.creatures.get(j).brain.num_axons;
                 }
                 average_brain_size /= target.creatures.size();
+                average_axon_size /= target.creatures.size();
                 total_gen /= target.creatures.size();
                 String popSize = "(" + world.species.get(i).creatures.size() + ")";
                 String genCount = "(" + max_gen + ")";
                 String avrCount = "(" + total_gen + ")";
                 String avr_brain_count = "(" + average_brain_size + ")";
+                String avr_axon_count = "(" + average_axon_size + ")";
                 text("Population : " + popSize, xx, yy);
                 yy += 50;
                 text("---Max generation number : " + genCount, xx+50, yy);
@@ -174,8 +173,10 @@
                 yy += 50;
                 text("---Average brain size : " + avr_brain_count, xx+50, yy);
                 yy += 50;
-                text(world.species.get(i).creatures.get(max_gen_index).brain.params.get_printout(), xx+50, yy);
-                yy += 640;
+                text("--Average axon count : " + avr_axon_count, xx+50, yy);
+                yy += 50;
+                //text(world.species.get(i).creatures.get(max_gen_index).brain.params.get_printout(), xx+50, yy);
+                //yy += 640;
             }
             text("Frame rate : " + frameRate, xx, yy);
             yy += 50;
@@ -183,15 +184,15 @@
             yy += 50;
             text("Generation : " + world.generation, xx, yy);
             yy += 50;
+            text("Num tiles respawning : " + world.num_tiles_in_queue, xx, yy);
+            yy += 50;
             text("Plant Matter Consumed : " + world.plantMatterConsumed, xx, yy);
             yy += 50;
             text("Creature Matter Consumed : " + world.creatureMatterConsumed, xx, yy);
             yy += 50;
-            text("Loss to resistance : " + world.lossToMovementResistance, xx, yy);
+            text("Asexual Reproduction : " + world.asexual_reproduction, xx, yy);
             yy += 50;
-            text("Loss to reproductive inefficiency : " + world.lossToReproductiveInefficiency, xx, yy);
-            yy += 50;
-            text("Loss by aging : " + world.lossToLifeByAging, xx, yy);
+            text("Sexual Reproduction : " + world.sexual_reproduction, xx, yy);
             scale(1,-1);
             
             // +~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~

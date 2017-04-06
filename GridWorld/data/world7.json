@@ -1,0 +1,116 @@
+{
+	"biomes" :
+		[
+			{
+				"name" : "Land 1",
+
+				"data" :
+					[
+						{
+							"life_time" : 1000,
+
+							"tile_color" : ["185", "122", "87"],
+							"tile_type" : ["1", "1"],
+
+							"food_color" : ["24", "131", "56"],
+							"food_type" : ["0.1", "0"],
+							"food_fertility" : 1,
+							"food_neighbors" : 5,
+							"food_respawn_time" : 350
+						}
+					]
+			},
+			{
+				"name" : "Land 2",
+
+				"data" :
+					[
+						{
+							"life_time" : 1000,
+
+							"tile_color" : ["185", "122", "87"],
+							"tile_type" : ["1", "1"],
+
+							"food_color" : ["24", "56", "131"],
+							"food_type" : ["0", "0.1"],
+							"food_fertility" : 1,
+							"food_neighbors" : 5,
+							"food_respawn_time" : 300
+						}
+					]
+			},
+			{
+				"name" : "Land 3",
+
+				"data" :
+					[
+						{
+							"life_time" : 1000,
+
+							"tile_color" : ["185", "122", "87"],
+							"tile_type" : ["1", "1"],
+
+							"food_color" : ["131", "24", "56"],
+							"food_type" : ["0.5", "0"],
+							"food_fertility" : 1,
+							"food_neighbors" : 5,
+							"food_respawn_time" : 1000
+						}
+					]
+			},
+			{
+				"name" : "Ocean",
+
+				"data" :
+					[
+						{
+							"life_time" : 1000,
+
+							"tile_color" : ["0", "0", "255"],
+							"tile_type" : ["0", "0"],
+
+							"food_color" : ["164", "223", "185"],
+							"food_type" : ["1", "1"],
+							"food_fertility" : 0,
+							"food_neighbors" : -1,
+							"food_respawn_time" : -1
+						}
+					]
+			}
+		],
+	"groups" :
+		[
+			{
+				"key" : ["0","162","232"],
+
+				"biomes" : 
+					[
+						{"name": "Ocean", "chance" : 1}
+					]
+			},
+			{
+				"key" : ["237","28","36"],
+
+				"biomes" : 
+					[
+						{"name": "Land 1", "chance" : 1}
+					]
+			},
+			{
+				"key" : ["185","122","87"],
+
+				"biomes" : 
+					[
+						{"name": "Land 2", "chance" : 1}
+					]
+			},
+			{
+				"key" : ["48","218","52"],
+
+				"biomes" : 
+					[
+						{"name": "Land 3", "chance" : 1}
+					]
+			}
+		]
+}
