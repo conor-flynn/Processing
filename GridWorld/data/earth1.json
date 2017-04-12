@@ -1,0 +1,655 @@
+{
+	"biomes" :
+		[
+			{
+				"name" : "Mountains, Infertile",
+
+				"data" :
+					[
+						{
+							"life_time" : 1,
+
+							"tile_color" : 
+								[
+									"125",
+									"80",
+									"50"
+								],
+							"tile_type" : 
+								[
+									"0","1"
+								],
+							"food_color" : 
+								[
+									"0", 
+									"0", 
+									"0"
+								],
+							"food_type" : 
+								[
+									"0","0"
+								],
+							"food_fertility" : 0,
+							"food_neighbors" : -1,
+							"food_respawn_time" : -1 
+						}
+					]
+			},
+			{
+				"name" : "Salt Water",
+
+				"data" :
+					[
+						{
+							"life_time" : 1,
+
+							"tile_color" : 
+								[
+									"0", 
+									"160", 
+									"230"
+								],
+							"tile_type" : 
+								[
+									"1","0"
+								],
+							"food_color" : 
+								[
+									"0", 
+									"0", 
+									"0"
+								],
+							"food_type" : 
+								[
+									"0","1"
+								],
+							"food_fertility" : 0,
+							"food_neighbors" : -1,
+							"food_respawn_time" : -1
+						}
+					]
+			},
+			{
+				"name" : "Desert, Infertile",
+
+				"data" :
+					[
+						{
+							"life_time" : 1,
+
+							"tile_color" : 
+								[
+									"240", 
+									"200", 
+									"170"
+								],
+							"tile_type" : 
+								[
+									"0","0"
+								],
+							"food_color" : 
+								[
+									"0", 
+									"0", 
+									"0"
+								],
+							"food_type" : 
+								[
+									"0","0"
+								],
+							"food_fertility" : 0,
+							"food_neighbors" : -1,
+							"food_respawn_time" : -1
+						}
+					]
+			},
+			{
+				"name" : "Desert, Near Water",
+
+				"data" :
+					[
+						{
+							"life_time" : 1,
+
+							"tile_color" : 
+								[
+									"35", 
+									"180", 
+									"75"
+								],
+							"tile_type" : 
+								[
+									"0","0"
+								],
+							"food_color" : 
+								[
+									"35", 
+									"210", 
+									"105"
+								],
+							"food_type" : 
+								[
+									"0","0"
+								],
+							"food_fertility" : 1,
+							"food_neighbors" : 5,
+							"food_respawn_time" : 200
+						}
+					]
+			},
+			{
+				"name" : "Land, Water Plants",
+
+				"data" :
+					[
+						{
+							"life_time" : 1,
+
+							"tile_color" : 
+								[
+									"45", 
+									"140", 
+									"95"
+								],
+							"tile_type" : 
+								[
+									"0","0"
+								],
+							"food_color" : 
+								[
+									"45", 
+									"170", 
+									"125"
+								],
+							"food_type" : 
+								[
+									"0","0"
+								],
+							"food_fertility" : 1,
+							"food_neighbors" : 5,
+							"food_respawn_time" : 100
+						}
+					]
+			},
+			{
+				"name" : "Fresh Water",
+
+				"data" :
+					[
+						{
+							"life_time" : 1,
+
+							"tile_color" : 
+								[
+									"25", 
+									"200", 
+									"230"
+								],
+							"tile_type" : 
+								[
+									"0.5","0"
+								],
+							"food_color" : 
+								[
+									"0", 
+									"0", 
+									"0"
+								],
+							"food_type" : 
+								[
+									"0","0"
+								],
+							"food_fertility" : 0,
+							"food_neighbors" : -1,
+							"food_respawn_time" : -1
+						}
+					]
+			},
+			{
+				"name" : "Salt Water River Plants",
+
+				"data" :
+					[
+						{
+							"life_time" : 1,
+
+							"tile_color" : 
+								[
+									"180", 
+									"230", 
+									"30"
+								],
+							"tile_type" : 
+								[
+									"0","0"
+								],
+							"food_color" : 
+								[
+									"180", 
+									"255", 
+									"60"
+								],
+							"food_type" : 
+								[
+									"0","0"
+								],
+							"food_fertility" : 1,
+							"food_neighbors" : 5,
+							"food_respawn_time" : 100
+						}
+					]
+			},
+			{
+				"name" : "Salt Water Ocean Plants",
+
+				"data" :
+					[
+						{
+							"life_time" : 1,
+
+							"tile_color" : 
+								[
+									"110", 
+									"140", 
+									"20"
+								],
+							"tile_type" : 
+								[
+									"0","0"
+								],
+							"food_color" : 
+								[
+									"110", 
+									"170", 
+									"20"
+								],
+							"food_type" : 
+								[
+									"0","0"
+								],
+							"food_fertility" : 1,
+							"food_neighbors" : 5,
+							"food_respawn_time" : 500
+						}
+					]
+			},
+			{
+				"name" : "Eroded Land",
+
+				"data" :
+					[
+						{
+							"life_time" : 1,
+
+							"tile_color" : 
+								[
+									"220", 
+									"180", 
+									"160"
+								],
+							"tile_type" : 
+								[
+									"0","0"
+								],
+							"food_color" : 
+								[
+									"0", 
+									"0", 
+									"0"
+								],
+							"food_type" : 
+								[
+									"0","0"
+								],
+							"food_fertility" : 0,
+							"food_neighbors" : -1,
+							"food_respawn_time" : -1
+						}
+					]
+			},
+			{
+				"name" : "Mountain Plants",
+
+				"data" :
+					[
+						{
+							"life_time" : 1,
+
+							"tile_color" : 
+								[
+									"75", 
+									"110", 
+									"40"
+								],
+							"tile_type" : 
+								[
+									"0.25","0"
+								],
+							"food_color" : 
+								[
+									"75", 
+									"140", 
+									"70"
+								],
+							"food_type" : 
+								[
+									"0","0"
+								],
+							"food_fertility" : 1,
+							"food_neighbors" : 5,
+							"food_respawn_time" : 100
+						}
+					]
+			},
+			{
+				"name" : "Normal Land Plants",
+
+				"data" :
+					[
+						{
+							"life_time" : 1000,
+
+							"tile_color" : 
+								[
+									"10", 
+									"200", 
+									"15"
+								],
+							"tile_type" : 
+								[
+									"0","0"
+								],
+							"food_color" : 
+								[
+									"10", 
+									"230", 
+									"45"
+								],
+							"food_type" : 
+								[
+									"0","0"
+								],
+							"food_fertility" : 1,
+							"food_neighbors" : 5,
+							"food_respawn_time" : 450
+						},
+						{
+							"life_time" : 1000,
+
+							"tile_color" : 
+								[
+									"45", 
+									"225", 
+									"0"
+								],
+							"tile_type" : 
+								[
+									"0","0"
+								],
+							"food_color" : 
+								[
+									"30", 
+									"25", 
+									"15"
+								],
+							"food_type" : 
+								[
+									"0","0"
+								],
+							"food_fertility" : 1,
+							"food_neighbors" : 6,
+							"food_respawn_time" : 450
+						}
+					]
+			},
+			{
+				"name" : "Sulfur Zone",
+
+				"data" :
+					[
+						{
+							"life_time" : 1,
+
+							"tile_color" : 
+								[
+									"255", 
+									"127", 
+									"39"
+								],
+							"tile_type" : 
+								[
+									"1","1"
+								],
+							"food_color" : 
+								[
+									"255", 
+									"157", 
+									"69"
+								],
+							"food_type" : 
+								[
+									"1","1"
+								],
+							"food_fertility" : 1,
+							"food_neighbors" : 5,
+							"food_respawn_time" : 100
+						}
+					]
+			}
+		],
+	"groups" :
+		[
+			{
+				"name" : "Mountains",
+				"key" : 
+					[
+						"125",
+						"80",
+						"50"
+					],
+				"biomes" : 
+					[
+						{
+							"name": "Mountains, Infertile", 
+							"chance" : 0.85
+						},
+						{
+							"name" : "Mountain Plants",
+							"chance" : 0.15
+						}
+					]
+			},
+			{
+				"name" : "Salt Water",
+				"key" : 
+					[
+						"0",
+						"160",
+						"230"
+					],
+				"biomes" : 
+					[
+						{
+							"name": "Salt Water", 
+							"chance" : 1
+						}
+					]
+			},
+			{
+				"name" : "Desert",
+				"key" : 
+					[
+						"240",
+						"200",
+						"170"
+					],
+				"biomes" : 
+					[
+						{
+							"name": "Desert, Infertile", 
+							"chance" : 1
+						}
+					]
+			},
+			{
+				"name" : "Desert Plants",
+				"key" : 
+					[
+						"35",
+						"180",
+						"75"
+					],
+				"biomes" : 
+					[
+						{
+							"name": "Desert, Near Water", 
+							"chance" : 0.9
+						},
+						{
+							"name" : "Desert, Infertile",
+							"chance" : 0.1
+						}
+					]
+			},
+			{
+				"name" : "Near water plants",
+				"key" : 
+					[
+						"45",
+						"140",
+						"95"
+					],
+				"biomes" : 
+					[
+						{
+							"name": "Land, Water Plants", 
+							"chance" : 1
+						}
+					]
+			},
+			{
+				"name" : "Fresh Water",
+				"key" : 
+					[
+						"25",
+						"200",
+						"230"
+					],
+				"biomes" : 
+					[
+						{
+							"name": "Fresh Water", 
+							"chance" : 0.95
+						},
+						{
+							"name" : "Land, Water Plants",
+							"chance" : 0.05
+						}
+					]
+			},
+			{
+				"name" : "Salt Water River Plants",
+				"key" : 
+					[
+						"180",
+						"230",
+						"30"
+					],
+				"biomes" : 
+					[
+						{
+							"name": "Salt Water River Plants", 
+							"chance" : 1
+						}
+					]
+			},
+			{
+				"name" : "Salt Water Ocean Plants",
+				"key" : 
+					[
+						"110",
+						"140",
+						"20"
+					],
+				"biomes" : 
+					[
+						{
+							"name": "Salt Water Ocean Plants", 
+							"chance" : 0.6
+						},
+						{
+							"name" : "Eroded Land",
+							"chance" : 0.4
+						}
+					]
+			},
+			{
+				"name" : "Eroded Land",
+				"key" : 
+					[
+						"220",
+						"180",
+						"160"
+					],
+				"biomes" : 
+					[
+						{
+							"name": "Eroded Land", 
+							"chance" : 1
+						}
+					]
+			},
+			{
+				"name" : "Mountain Plants",
+				"key" : 
+					[
+						"75",
+						"110",
+						"40"
+					],
+				"biomes" : 
+					[
+						{
+							"name": "Mountain Plants", 
+							"chance" : 1
+						}
+					]
+			},
+			{
+				"name" : "Normal Land Plants",
+				"key" : 
+					[
+						"10",
+						"200",
+						"15"
+					],
+				"biomes" : 
+					[
+						{
+							"name": "Normal Land Plants", 
+							"chance" : 0.95
+						},
+						{
+							"name": "Eroded Land",
+							"chance" : 0.05
+						}
+					]
+			},
+			{
+				"name" : "Sulfur Zone",
+				"key" : 
+					[
+						"255",
+						"127",
+						"39"
+					],
+				"biomes" : 
+					[
+						{
+							"name": "Sulfur Zone", 
+							"chance" : 1
+						}
+					]
+			}
+		]
+}

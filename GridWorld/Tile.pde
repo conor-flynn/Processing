@@ -15,10 +15,11 @@
         // ----
         boolean isFood;
         long respawn_frame;
-        Tile younger_tile;
-        Tile older_tile;
+        Tile respawn_younger_tile;
+        Tile respawn_older_tile;
         boolean isRespawning;
         int active_neighbors;
+        // ----
         // ----
         World world;
         // ----
@@ -36,8 +37,8 @@
             this.shouldRedraw = true;
             // ----
             this.respawn_frame = -1;
-            this.younger_tile = null;
-            this.older_tile = null;
+            this.respawn_younger_tile = null;
+            this.respawn_older_tile = null;
             this.isRespawning = false;
             this.isFood = false;
             // ----
@@ -54,7 +55,7 @@
                 for (int y = -1; y <= +1; y++) {
                     if (x == 0 && y == 0) continue;
                     Tile temp = world.get_tile_at_point(xx+x, yy+y);
-                    if (temp != null) {
+                    if (temp != null && (temp.biome.equals(biome))) {
                         neighbors.add(temp);
                     }
                 }
@@ -79,7 +80,6 @@
             //}
         }
         void debug_draw(color c, int d) {
-            if (!Settings.DRAW_SIMULATION) return;
             fill(c);
             rect(x-(w*d), y-(w*d), w*d*2, w*d*2);
         }
@@ -93,7 +93,7 @@
                 if (isFood) {
                     // blend between food and tile
                     float[] food = biome.get_food_color();
-                    float v1 = 0.1f;
+                    float v1 = 0f;
                     float v2 = 1 - v1;
                     
                     result[0] = (v1)*(result[0]) + (v2)*(food[0]);
@@ -103,7 +103,7 @@
                 return result;
             } else {
                 float[] cre = creature.get_color(); 
-                float v1 = 0.1f;
+                float v1 = 0f;
                 float v2 = 1 - v1;
                     result[0] = (v1)*(result[0]) + (v2)*(cre[0]);
                     result[1] = (v1)*(result[1]) + (v2)*(cre[1]);
@@ -125,15 +125,16 @@
             float result = getFoodFertility();
             float difference = 0;
             for (int i = 0; i < food_type.length; i++) {
-                difference += ((2.0 / food_type.length) * abs(food_type[i] - stomach_type[i]));
+                difference += (abs(food_type[i] - stomach_type[i]));
             }
+            // a distance of 1 should result in 0 food
+            // a distance of 2 should result in -1 food
             // difference: [0.0, 2.0]
             killFood();
             update_neighbors();
             try_respawn(false);
             
-            float answer = (result * (1.0 - difference));
-            assert(answer >= 0 && answer <= 1);
+            float answer = (result - difference);
             
             return answer;
         }
@@ -147,14 +148,12 @@
             
             this.creature = creature;
             this.creature.tile = this;
-            debug_draw(color(255,255,0), 2);
-            /*
+            //debug_draw(color(255,255,0), 2);
             if (isFood) {
                 killFood();
                 update_neighbors();
                 try_respawn(false);
             }
-            */
         }
         void update_neighbors() {
             int change = -1;
@@ -184,7 +183,7 @@
                         respawn_frame = 0;
                     } else {
                         int delta = biome.get_food_respawn_time();
-                        float multiplier = random(0.5, 2);
+                        float multiplier = random(0.8, 1.2);
                         delta = (int)(delta * multiplier);
                         respawn_frame = world.generation + delta;
                     }
@@ -217,16 +216,19 @@
         float get_color_by_channel(int channel) {
             assert(channel >= 0 && channel <= 2);
             float[] c = get_color();
-            return c[channel] / 255.0;
+            return (((int)c[channel])/255.0);
         }
         float getMovementResistance(float[] creature_type) {
             
             float[] tile_type = biome.get_tile_type();
             float difference = 0;
             for (int i = 0; i < tile_type.length; i++) {
-                difference += ((1.0 / tile_type.length) * abs(tile_type[i] - creature_type[i]));
+                difference += (abs(tile_type[i] - creature_type[i]));
             }
-            assert(difference >= 0);
-            return difference;   
+            if (difference > 1) return (difference*difference);
+            else return difference;
+            // a distance of 0, results in 0
+            // a distance of 1, results in 1
+            // a distance of 2, results in 4
         }
     }

@@ -7,16 +7,28 @@
 				"data" :
 					[
 						{
-							"life_time" : 1000,
+							"life_time" : 4000,
 
 							"tile_color" : ["185", "122", "87"],
 							"tile_type" : ["1", "1"],
 
 							"food_color" : ["24", "131", "56"],
-							"food_type" : ["0.1", "0"],
+							"food_type" : ["0", "0"],
 							"food_fertility" : 1,
 							"food_neighbors" : 5,
 							"food_respawn_time" : 350
+						},
+						{
+							"life_time" : 4000,
+
+							"tile_color" : ["170", "122", "120"],
+							"tile_type" : ["1", "1"],
+
+							"food_color" : ["55", "200", "200"],
+							"food_type" : ["0", "0"],
+							"food_fertility" : 1,
+							"food_neighbors" : 5,
+							"food_respawn_time" : 150
 						}
 					]
 			},
@@ -26,15 +38,39 @@
 				"data" :
 					[
 						{
-							"life_time" : 1000,
+							"life_time" : 5000,
 
 							"tile_color" : ["185", "122", "87"],
 							"tile_type" : ["1", "1"],
 
 							"food_color" : ["24", "56", "131"],
-							"food_type" : ["0", "0.1"],
+							"food_type" : ["0", "0"],
 							"food_fertility" : 1,
 							"food_neighbors" : 5,
+							"food_respawn_time" : 300
+						},
+						{
+							"life_time" : 5000,
+
+							"tile_color" : ["185", "122", "87"],
+							"tile_type" : ["1", "1"],
+
+							"food_color" : ["24", "56", "131"],
+							"food_type" : ["0", "0"],
+							"food_fertility" : 1,
+							"food_neighbors" : 5,
+							"food_respawn_time" : 300
+						},
+						{
+							"life_time" : 5000,
+
+							"tile_color" : ["255", "40", "40"],
+							"tile_type" : ["1", "1"],
+
+							"food_color" : ["24", "56", "131"],
+							"food_type" : ["1", "0"],
+							"food_fertility" : 1,
+							"food_neighbors" : 0,
 							"food_respawn_time" : 300
 						}
 					]
@@ -45,16 +81,28 @@
 				"data" :
 					[
 						{
-							"life_time" : 1000,
+							"life_time" : 6000,
 
 							"tile_color" : ["185", "122", "87"],
 							"tile_type" : ["1", "1"],
 
 							"food_color" : ["131", "24", "56"],
-							"food_type" : ["0.5", "0"],
+							"food_type" : ["0", "0"],
 							"food_fertility" : 1,
 							"food_neighbors" : 5,
-							"food_respawn_time" : 1000
+							"food_respawn_time" : 300
+						},
+						{
+							"life_time" : 6000,
+
+							"tile_color" : ["185", "122", "87"],
+							"tile_type" : ["1", "1"],
+
+							"food_color" : ["70", "92", "15"],
+							"food_type" : ["0", "0.1"],
+							"food_fertility" : 1,
+							"food_neighbors" : 8,
+							"food_respawn_time" : 600
 						}
 					]
 			},

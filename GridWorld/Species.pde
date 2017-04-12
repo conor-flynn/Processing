@@ -29,13 +29,16 @@ class Species {
         tile.creatureEntering(creature);
         
         creature.brain = new Brain(creature);
+        creature.brain.tile_type = tile.biome.get_tile_type();
+        creature.brain.food_type = tile.biome.get_food_type();
         
         creature.red = random(255);
         creature.green = random(255);
         creature.blue = random(255);
         
         creature.life = Settings.CREATURE_BIRTH_FOOD;
-        
+        creature.fresh_spawn = true;
+        world.creature_fresh_spawn_counter++;
         creatures.add(creature); 
     }
     
@@ -85,21 +88,27 @@ class Species {
             creatures.get(i).update();
         }
         while (preGrave.size() > 0) {
-           Creature target = preGrave.get(0);
-           target.tile.shouldRedraw = true;
-           target.tile.creature = null;
-           boolean deleted = false;
-           for (int i = 0; i < creatures.size(); i++) {
-              if (creatures.get(i) == target) {
-                 creatures.remove(i);
-                 deleted = true;
-                 break;
-              }
-           }
-           assert(deleted == true);
-           preGrave.remove(0);
+            Creature target = preGrave.get(0);
+            target.tile.shouldRedraw = true;
+            target.tile.creature = null;
+            boolean deleted = false;
+            for (int i = 0; i < creatures.size(); i++) {
+                if (creatures.get(i) == target) {
+                    if (!target.made_action_sometime_during_life) {
+                        if (target.fresh_spawn) {
+                            world.creature_fresh_spawn_never_action++;
+                        }
+                        world.creature_never_action++;
+                    }
+                    creatures.remove(i);
+                    deleted = true;
+                    break;
+                }
+            }
+            assert(deleted == true);
+            preGrave.remove(0);
         }
-        for (int i = 0; i < (numCreatures-creatures.size()); i++) {
+        for (int i = 0; i < (numCreatures-creatures.size())*2; i++) {
             spawnCreature();
         }
     }

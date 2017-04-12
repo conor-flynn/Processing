@@ -114,6 +114,15 @@ class Biome {
     int         _food_neighbors;
     int         _food_respawn_time;
     
+    @Override
+    public boolean equals(Object other) {
+        if (other == this) return true;
+        
+        if (!(other instanceof Biome)) return false;
+        
+        Biome casted = (Biome) other;
+        return (label.equals(casted.label));
+    }
     public Biome(String label, int num_cycles) 
     {
         this.num_cycles = num_cycles;

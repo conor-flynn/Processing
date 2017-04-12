@@ -7,10 +7,16 @@
         double creatureMatterConsumed = 0;
         long asexual_reproduction = 0;
         long sexual_reproduction = 0;
+        long creature_no_action = 0;
+        long creature_sexual_action = 0;
+        long creature_move_action = 0;
+        long creature_never_action = 0;
+        long creature_fresh_spawn_never_action = 0;
+        long creature_fresh_spawn_counter = 0;
       
         ArrayList<Tile> tiles = new ArrayList<Tile>();
-        Tile youngest_tile = null;
-        Tile oldest_tile = null;
+        Tile respawn_youngest_tile = null;
+        Tile respawn_oldest_tile = null;
         int num_tiles_in_queue = 0;
         
         HashMap<String, Biome> biomes = new HashMap<String, Biome>();
@@ -28,6 +34,7 @@
         
         
         public World() {
+            
             gui = new GUI(this);
             frameRate(Settings.TARGET_FRAME_RATE);
             loadFromFile(Settings.WORLD_BIOME_DESCRIPTIONS, Settings.WORLD_TILE_DESCRIPTIONS);
@@ -76,7 +83,6 @@
             return tiles.get(index);
         }
         void load_biome_descriptions(String file_name) {
-            println(file_name);
             JSONObject file = loadJSONObject(file_name);
             JSONArray biomes_aray = file.getJSONArray("biomes");
             JSONArray biome_groups_array = file.getJSONArray("groups");
@@ -140,6 +146,7 @@
             PImage source = loadImage(file_name);
             assert(source.width == source.height);
             Settings.NUM_TILES = source.width;
+            Settings.WORLD_WIDTH = Settings.NUM_TILES * Settings.TILE_WIDTH;
             PVector tileOffset = new PVector(Settings.TILE_WIDTH/2, Settings.TILE_WIDTH/2);
             
             for (int y = 0; y < source.height; y++) {
@@ -156,7 +163,8 @@
                     
                     int xx = (int)((x*Settings.TILE_WIDTH) + tileOffset.x);
                     int yy = (int)(((Settings.NUM_TILES-y)*Settings.TILE_WIDTH) + tileOffset.y);
-                    int ww = Settings.TILE_WIDTH - 2;
+                    //int yy = (int)((y*Settings.TILE_WIDTH) + tileOffset.y);
+                    int ww = Settings.TILE_WIDTH;// - 2;
                     int index = x + (y * Settings.NUM_TILES);
                     
                     tiles.add(buildTileFromFile(biome, xx,yy,ww,index));
@@ -172,7 +180,7 @@
                 tile.load_neighbors();
             }
             for (Tile tile : tiles) {
-                if (random(1) > 0.6f) tile.try_respawn(true);
+                tile.try_respawn(true);
             }
         }
         public void loadFromFile(String biome_descriptions, String tile_descriptions) {
@@ -180,56 +188,6 @@
             // All biomes are loaded from file and updated (updated: tiles can properly reference this biome)
             // All <V3, BiomeGroup> have been loaded
             load_tiles_from_image(tile_descriptions);
-            /*
-            JSONObject worldData = loadJSONObject(filename);
-            JSONArray biomesData  = worldData.getJSONArray("biomes");
-            JSONArray tileData   = worldData.getJSONArray("tiles");
-            
-            
-            int num_rows = tileData.size();
-            Settings.NUM_TILES = num_rows;
-            Settings.WORLD_WIDTH = Settings.NUM_TILES * Settings.TILE_WIDTH;
-            for (int rowIndex = 0; rowIndex < tileData.size(); rowIndex++) {
-                if (tileData.getString(rowIndex).length()/2 != num_rows) {
-                    println("Row count : " + tileData.size());
-                    println("Column count : " + tileData.getString(rowIndex).length()/2);
-                    assert(false); 
-                } 
-                
-            }
-            
-            ArrayList<String> reversedData = new ArrayList<String>();
-            for (int rowIndex = tileData.size()-1; rowIndex >= 0; rowIndex--) {
-                reversedData.add(tileData.getString(rowIndex)); 
-            }
-            
-            
-            PVector tileOffset = new PVector(Settings.TILE_WIDTH/2, Settings.TILE_WIDTH/2);
-            for (int rowIndex = 0; rowIndex < reversedData.size(); rowIndex++) {
-                String _rowData = reversedData.get(rowIndex);
-                char[] rowData = _rowData.toCharArray();
-                for (int colIter = 0; colIter < rowData.length; colIter+=2) {
-                    String label = Character.toString(rowData[colIter]) + Character.toString(rowData[colIter+1]);
-                    Biome target = biomes.get(label);
-                    assert(target != null);
-                    
-                    int colIndex = colIter/2;
-                    int x = (colIndex * Settings.TILE_WIDTH);
-                        x+= tileOffset.x;
-                    int y = (rowIndex * Settings.TILE_WIDTH);
-                        y+= tileOffset.y;
-                    int w = Settings.TILE_WIDTH - 2;
-                    int index = colIndex + (rowIndex * Settings.NUM_TILES);
-                    tiles.add(buildTileFromFile(target, x, y, w, index));
-                }
-            }
-            for (Tile tile : tiles) {
-                tile.load_neighbors();
-            }
-            for (Tile tile : tiles) {
-                if (random(1) > 0.6f) tile.try_respawn(true);
-            }
-            */
         }
         Tile buildTileFromFile(Biome target, int x, int y, int w, int index) {
              Tile t = new Tile(x, y, w, index, target, this);
@@ -303,6 +261,7 @@
         
         
         void preDraw() {
+            try_report();
             if (Settings.DRAW_SIMULATION) gui.preDraw(); 
         }
         void draw() {
@@ -319,6 +278,12 @@
                 }
                 for (int i = 0; i < species.size(); i++) {
                     species.get(i).draw();
+                }
+            }
+            if (Settings.DRAW_SPECIES) {
+                Species target = species.get(Settings.DRAW_SPECIES_INDEX);
+                for (Creature creature : target.creatures) {
+                    creature.tile.debug_draw(color(255,255,255), 5);
                 }
             }
         }
@@ -394,58 +359,58 @@
         void add_tile_to_queue(Tile guy) {
             num_tiles_in_queue++;
             guy.isRespawning = true;
-            if (youngest_tile == null) {
+            if (respawn_youngest_tile == null) {
             
                 // Case: there is no chain that exists
                 
-                youngest_tile = guy;
-                youngest_tile.younger_tile = null;
-                youngest_tile.older_tile = null;
+                respawn_youngest_tile = guy;
+                respawn_youngest_tile.respawn_younger_tile = null;
+                respawn_youngest_tile.respawn_older_tile = null;
                 
                 return;
-            } else if (oldest_tile == null) {
+            } else if (respawn_oldest_tile == null) {
                 
                 // Case: there is a chain of 1 item
                 
-                if (youngest_tile.respawn_frame <= guy.respawn_frame) {
+                if (respawn_youngest_tile.respawn_frame <= guy.respawn_frame) {
                 
                     // Case:
-                        // There was only a 'youngest_tile'. 
-                        // The new link should go after the 'youngest_tile'
+                        // There was only a 'respawn_youngest_tile'. 
+                        // The new link should go after the 'respawn_youngest_tile'
                 
-                    oldest_tile = guy;
+                    respawn_oldest_tile = guy;
                     
-                    youngest_tile.older_tile = oldest_tile;
-                    youngest_tile.older_tile.younger_tile = youngest_tile;
-                    youngest_tile.older_tile.older_tile = null;
+                    respawn_youngest_tile.respawn_older_tile = respawn_oldest_tile;
+                    respawn_youngest_tile.respawn_older_tile.respawn_younger_tile = respawn_youngest_tile;
+                    respawn_youngest_tile.respawn_older_tile.respawn_older_tile = null;
                     
                     return;
                 } else {
                 
                     // Case:
-                        // There was only a 'youngest_tile'. 
-                        // The new link should go before the 'youngest_tile'
+                        // There was only a 'respawn_youngest_tile'. 
+                        // The new link should go before the 'respawn_youngest_tile'
                 
-                    oldest_tile = youngest_tile;
-                    youngest_tile = guy;
+                    respawn_oldest_tile = respawn_youngest_tile;
+                    respawn_youngest_tile = guy;
                     
-                    youngest_tile.younger_tile = null;
-                    youngest_tile.older_tile = oldest_tile;
-                    youngest_tile.older_tile.younger_tile = youngest_tile;
-                    youngest_tile.older_tile.older_tile = null;
+                    respawn_youngest_tile.respawn_younger_tile = null;
+                    respawn_youngest_tile.respawn_older_tile = respawn_oldest_tile;
+                    respawn_youngest_tile.respawn_older_tile.respawn_younger_tile = respawn_youngest_tile;
+                    respawn_youngest_tile.respawn_older_tile.respawn_older_tile = null;
                     
                     return;
                 }
             }
-            if (oldest_tile.respawn_frame <= guy.respawn_frame) {
+            if (respawn_oldest_tile.respawn_frame <= guy.respawn_frame) {
             
                 // Case:
                     // The new link should be added to the end of the chain
             
-                guy.younger_tile = oldest_tile;
-                guy.younger_tile.older_tile = guy;
+                guy.respawn_younger_tile = respawn_oldest_tile;
+                guy.respawn_younger_tile.respawn_older_tile = guy;
                 
-                oldest_tile = guy;
+                respawn_oldest_tile = guy;
                 
                 return;
                 
@@ -455,20 +420,20 @@
                     // The respawn time is less than the oldest tile, 
                     // so it has to be inserted somewhere into the chain
                     
-                Tile worker = oldest_tile;
+                Tile worker = respawn_oldest_tile;
                 
                 while (true) {
                 
-                    worker = worker.younger_tile;
+                    worker = worker.respawn_younger_tile;
                     if (worker == null) {
                         
                         // Case: worker is null, 'guy' should be inserted in front of the youngest tile
                         
-                        guy.younger_tile = null;
-                        guy.older_tile = youngest_tile;
-                        guy.older_tile.younger_tile = guy;
+                        guy.respawn_younger_tile = null;
+                        guy.respawn_older_tile = respawn_youngest_tile;
+                        guy.respawn_older_tile.respawn_younger_tile = guy;
                         
-                        youngest_tile = guy;
+                        respawn_youngest_tile = guy;
                         
                         return;
                     }
@@ -477,13 +442,13 @@
                         
                         // Case: Adding somewhere in the middle of the chain
                         
-                        assert(worker != oldest_tile);
+                        assert(worker != respawn_oldest_tile);
                         
-                        guy.younger_tile = worker;
-                        guy.older_tile = worker.older_tile;
+                        guy.respawn_younger_tile = worker;
+                        guy.respawn_older_tile = worker.respawn_older_tile;
                         
-                        guy.younger_tile.older_tile = guy;
-                        guy.older_tile.younger_tile = guy;
+                        guy.respawn_younger_tile.respawn_older_tile = guy;
+                        guy.respawn_older_tile.respawn_younger_tile = guy;
                         
                         return;
                     
@@ -498,43 +463,68 @@
             num_tiles_in_queue--;
         }
         void manage_tile_respawn() {
-            if (youngest_tile == null) return;
+            if (respawn_youngest_tile == null) return;
             
             /*
-            if (youngest_tile != null) {
-                println((youngest_tile.respawn_frame - this.generation));
+            if (respawn_youngest_tile != null) {
+                println((respawn_youngest_tile.respawn_frame - this.generation));
             }
             */
             
-            while(youngest_tile != null && (youngest_tile.respawn_frame <= this.generation)) {
-                respawn_tile(youngest_tile);
+            while(respawn_youngest_tile != null && (respawn_youngest_tile.respawn_frame <= this.generation)) {
+                respawn_tile(respawn_youngest_tile);
                 
-                if (youngest_tile.older_tile == null) {
+                if (respawn_youngest_tile.respawn_older_tile == null) {
                 
-                    // Case: respawned the youngest_tile, and there is ONLY a youngest_tile.
+                    // Case: respawned the respawn_youngest_tile, and there is ONLY a respawn_youngest_tile.
                     
-                    youngest_tile = null;
+                    respawn_youngest_tile = null;
                     
                     return;
                     
-                } else if (youngest_tile.older_tile == oldest_tile) {
+                } else if (respawn_youngest_tile.respawn_older_tile == respawn_oldest_tile) {
                 
                     // Case: There are only two tiles. Clear the first one, and replace it with the second one.
                     
-                    youngest_tile = oldest_tile;
-                    youngest_tile.younger_tile = null;
-                    youngest_tile.older_tile = null;
-                    oldest_tile = null;
+                    respawn_youngest_tile = respawn_oldest_tile;
+                    respawn_youngest_tile.respawn_younger_tile = null;
+                    respawn_youngest_tile.respawn_older_tile = null;
+                    respawn_oldest_tile = null;
                     
                 } else {
                 
-                    // Case: Remove the youngest_tile and increment the chain
+                    // Case: Remove the respawn_youngest_tile and increment the chain
                 
-                    youngest_tile = youngest_tile.older_tile;
-                    youngest_tile.younger_tile = null;
+                    respawn_youngest_tile = respawn_youngest_tile.respawn_older_tile;
+                    respawn_youngest_tile.respawn_younger_tile = null;
                     
                 }
             }
+        }
+        int frames_since_report = 0;
+        long previous_report_time = millis();
+        void try_report() {
+            frames_since_report++;            
+            long elapsed_time = millis() - previous_report_time;            
+            if (elapsed_time > (Settings.TIME_PER_REPORT * 1000)) {
+                this.report();
+            }
+        }
+        void report() {
+            long elapsed_time = millis() - previous_report_time;
+            float frames_per_second = ((float)frames_since_report) / (elapsed_time / 1000);
+            println("Time elapsed(" + ((float)elapsed_time/1000) + "), Frames since report(" + frames_since_report + "), Frames per second(" + frames_per_second + ")");
+            print("\t(");
+            for (int i = 0; i < world.species.size(); i++) {
+                print(world.species.get(i).creatures.size());
+                if (i+1 == world.species.size()) {
+                    println(")");
+                } else {
+                    print(", ");
+                }
+            }            
+            frames_since_report = 0;
+            previous_report_time = millis();
         }
     }
     

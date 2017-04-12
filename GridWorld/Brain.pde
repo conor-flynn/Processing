@@ -5,8 +5,6 @@ class Brain {
     Creature creature;
     ArrayList<Float> process_results = new ArrayList<Float>();
     
-    HashMap<Integer, ArrayList<WorldConnection>> available_connections = 
-        new HashMap<Integer, ArrayList<WorldConnection>>();
     ArrayList<Input> world_inputs = new ArrayList<Input>();
     
     HashMap<Integer, Neuron> special_neurons = new HashMap<Integer, Neuron>();
@@ -16,15 +14,15 @@ class Brain {
     boolean timer_1_direction = true;
     boolean timer_2_direction = true;
     
-    int memory_1_input_index = 4;
-    int memory_1_output_index = 5;
+    int memory_1_input_index = 3;
+    int memory_1_output_index = 4;
     
-    int memory_2_input_index = 6;
-    int memory_2_output_index = 7;
+    int memory_2_input_index = 5;
+    int memory_2_output_index = 6;
     
-    int general_special_neuron_start_index = 8;
+    int general_special_neuron_start_index = 7;
     
-    int readable_outputs = 4;
+    int readable_outputs = 3;
     
     float[] tile_type = new float[2];
     float[] food_type = new float[2];
@@ -32,20 +30,12 @@ class Brain {
     
     int num_axons = 0;
     
-    void setup_available_connections() {
-        for (int channel = 0; channel <= 2; channel++) {
-            ArrayList<WorldConnection> currents = new ArrayList<WorldConnection>();
-            
-            for (int x = -2; x <= 2; x++) {
-                for (int y = -2; y <= 2; y++) {
-                    currents.add(new WorldConnection(x,y));
-                }
-            }
-            available_connections.put(channel, currents);
-        }
-    }
+    float additional_mutate_rate = 0;
+    
     Brain(Creature creature) {
         this.creature = creature;
+        
+        additional_mutate_rate = Settings.CREATURE_MUTATION_RATE_ADDITIONAL_MUTATION_RATE;
         
         int neuron_id_count = 0;
         
@@ -57,9 +47,7 @@ class Brain {
         food_type[1] = 0;//random(0,1);
         for (int i = 0; i < 4; i++) {
             inherited_values[i] = random(-1,1);
-        }
-        
-        setup_available_connections();                    
+        }                 
         
         // Output setup
         {
@@ -76,30 +64,30 @@ class Brain {
             neuron_id_count++;
             process_results.add(0f);
             
-            output_neurons.put(neuron_id_count, new Neuron(neuron_id_count));
-            neuron_id_count++;
-            process_results.add(0f);
+            //output_neurons.put(neuron_id_count, new Neuron(neuron_id_count));
+            //neuron_id_count++;
+            //process_results.add(0f);
             
             assert(neuron_id_count == readable_outputs);
             
-            assert(neuron_id_count == 4); 
+            assert(neuron_id_count == 3); 
             /*
-            int memory_1_input_index = 4;
-            int memory_1_output_index = 5;
+            int memory_1_input_index = 3;
+            int memory_1_output_index = 4;
             */
             special_neurons.put(neuron_id_count, new Neuron(neuron_id_count++));    // input
             output_neurons.put(neuron_id_count, new Neuron(neuron_id_count++));     // output
             
-            assert(neuron_id_count == 6);
+            assert(neuron_id_count == 5);
             /*
-            int memory_2_input_index = 6;
-            int memory_2_output_index = 7;            
+            int memory_2_input_index = 5;
+            int memory_2_output_index = 6;            
             */
             special_neurons.put(neuron_id_count, new Neuron(neuron_id_count++));    // input
             output_neurons.put(neuron_id_count, new Neuron(neuron_id_count++));     // output
         }
         
-        assert(neuron_id_count == (1+1+1+1 +2 +2));    //4 + 4 = 8
+        assert(neuron_id_count == (1+1+1 +2 +2));    //4 + 4 = 8
         assert(neuron_id_count == general_special_neuron_start_index);
         //int general_special_neuron_start_index = 8;
         special_neurons.put(neuron_id_count, new Neuron(neuron_id_count++));//1
@@ -111,8 +99,10 @@ class Brain {
         special_neurons.put(neuron_id_count, new Neuron(neuron_id_count++));//7
         special_neurons.put(neuron_id_count, new Neuron(neuron_id_count++));//8
         special_neurons.put(neuron_id_count, new Neuron(neuron_id_count++));//9
+        special_neurons.put(neuron_id_count, new Neuron(neuron_id_count++));//10
+        special_neurons.put(neuron_id_count, new Neuron(neuron_id_count++));//11
         
-        assert(neuron_id_count == (1+1+1+1  +2+2   +9));
+        assert(neuron_id_count == (1+1+1  +2+2   +11));
         
         int num_initial_workers = 0;
         for (int i = 0; i < num_initial_workers; i++) {
@@ -120,13 +110,30 @@ class Brain {
             worker_neurons.put(id, new Neuron(id));
         }
         
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < floor(random(40,60)); i++) {
+            Input ii = add_new_input();
+            assert(ii != null);
+            add_new_connection_from_world_input(ii);
+            add_new_connection_from_world_input(ii);
+        }
+        for (int i = 0; i < floor(random(0,20)); i++) {
+            add_new_connection_from_special_input();
+            //add_new_connection_from_middle_neuron_to_middle_neuron_or_output_neuron();
+        }
+        //add_new_connection_from_special_input(special_neurons.get(general_special_neuron_start_index+4));
+        //add_new_connection_from_special_input(special_neurons.get(general_special_neuron_start_index+4));
+        
+        for (int i = 0; i < 0; i++) {
             
-            add_new_input();
-            add_new_input();
-            add_new_connection_from_any_input();
-            add_new_connection_from_any_input();
             bisect_any_connection();
+            add_new_input();
+            add_new_input();
+            add_new_input();
+            add_new_connection_from_world_input();
+            add_new_connection_from_world_input();
+            add_any_new_connection();
+            add_any_new_connection();
+            add_any_new_connection();
             add_any_new_connection();
             add_any_new_connection();
         }
@@ -168,6 +175,14 @@ class Brain {
         assert(num_axons >= 0);
         return (world_inputs.size() + worker_neurons.size()) + num_axons;
     }
+    int adjusted_brain_size() {
+        int v = brain_size();
+        if (v < Settings.CREATURE_BRAIN_SIZE_IGNORE) {
+            return 0;
+        } else {
+            return (v - Settings.CREATURE_BRAIN_SIZE_IGNORE);
+        }
+    }
     void mutate_count(int x) {
         while (x > 0) {
             mutate();
@@ -178,22 +193,30 @@ class Brain {
         
         creature.mutate_color(Settings.CREATURE_COLOR_MUTATION_AMOUNT);
         
-        if (random(1) > Settings.CREATURE_MUTATION_RATE) return;
+        //additional_mutate_rate += random(-0.01, +0.01);
+        if (fifty()) {
+            additional_mutate_rate *= 1.05;
+        } else {
+            additional_mutate_rate *= 0.95;
+        }
+        if (additional_mutate_rate < 0) additional_mutate_rate = 0;
+        
+        if (random(1) > (additional_mutate_rate + Settings.CREATURE_MUTATION_RATE_BASE)) return;
         
         int x = floor(random(0, 36));
         if (x < 1) {
             bisect_any_connection();
-            if (fifty()&&fifty()&&fifty()&&fifty()) remove_random_middle_neuron();
+            //if (random(1) < 0.1) remove_random_middle_neuron();
             return;
         }
         if (x < 2) {
-            add_new_input();
-            if (fifty()&&fifty()&&fifty()) remove_world_input();
+            add_new_connection_from_world_input(add_new_input());
+            //if (random(1) < 0.01) remove_world_input();
             return;
         }
-        if ( x < 30 ) {
+        if ( x < 8 ) {
             add_any_new_connection();
-            if (fifty()&&fifty()&&fifty()) remove_random_axon();
+            //if (random(1) < 0.01) remove_random_axon();
             return;
         }
         if ( x < 35 ) {
@@ -389,7 +412,7 @@ class Brain {
             }
         }
         world_inputs.add(new_input);
-        available_connections.get(new_input.channel).remove(new_input.connection);
+        //available_connections.get(new_input.channel).remove(new_input.connection);
     }
     void add_matched_input_neurons(Input a, Input b) {
         assert(a.neuron_id == b.neuron_id);
@@ -415,7 +438,7 @@ class Brain {
             if (fifty()) add_axon_and_dependents(new_input, other);
         }
         world_inputs.add(new_input);
-        available_connections.get(new_input.channel).remove(new_input.connection);
+        //available_connections.get(new_input.channel).remove(new_input.connection);
     }
     void add_axon_and_dependents(Input source, Axon guy) {
         assert(guy != null);
@@ -529,7 +552,8 @@ class Brain {
     }
     Brain(Brain a, Brain b, Creature creature) {
         this.creature = creature;
-        setup_available_connections();
+        this.additional_mutate_rate = (fifty() ? a.additional_mutate_rate : b.additional_mutate_rate);
+        //setup_available_connections();
         for (int i = 0; i < 4; i++) {
             inherited_values[i] = ((fifty()) ? a.inherited_values[i] : b.inherited_values[i]);
             if (fifty()&&fifty()) inherited_values[i] = random(-1,1);
@@ -610,6 +634,7 @@ class Brain {
     }
     Brain(Brain source, Creature creature) {
         this.creature = creature;
+        this.additional_mutate_rate = source.additional_mutate_rate;
         for (int i = 0; i < 4; i++) {
             if (fifty()&&fifty()) {
                 inherited_values[i] = random(-1,1);
@@ -631,6 +656,7 @@ class Brain {
             Neuron neuron = ((Neuron)me.getValue());
             output_neurons.put(neuron.neuron_id, neuron.deep_copy());
         }
+        /*
         for (int i = 0; i <= 2; i++) {
             available_connections.put(i, new ArrayList<WorldConnection>());
         }
@@ -641,6 +667,7 @@ class Brain {
                 available_connections.get(channel).add(guy);   
             }
         }
+        */
         for (int i = 0; i < 2; i++) {
             tile_type[i] = source.tile_type[i];
             food_type[i] = source.food_type[i];
@@ -668,8 +695,7 @@ class Brain {
         ArrayList<Axon> axons = get_random_special_neuron().neuron_connections;
         if (axons.size() == 0) return;
         Axon worker = get_random_axon_from_axons(axons);
-        assert(worker != null);
-        worker.weight += random(-1, +1);
+        mutate_axon(worker);
     }
     void mutate_input_axon() {
         
@@ -679,8 +705,7 @@ class Brain {
         if (source.neuron_connections.size() == 0) return;
         
         Axon worker = get_random_axon_from_input(source);
-        assert(worker != null);
-        worker.weight += random(-0.1f, +0.1f);         
+        mutate_axon(worker);    
     }
     void mutate_worker_neuron_axon() {
         if (worker_neurons.size() == 0) return;
@@ -690,8 +715,11 @@ class Brain {
         if (source.neuron_connections.size() == 0) return;
         
         Axon worker = get_random_axon_from_neuron(source);
-        assert(worker != null);
-        worker.weight += random(-0.1f, +0.1f); 
+        mutate_axon(worker); 
+    }
+    void mutate_axon(Axon axon) {
+        assert(axon != null);
+        axon.weight += random(-Settings.AXON_MUTATION_AMOUNT, +Settings.AXON_MUTATION_AMOUNT);
     }
     boolean has_connection(int original_neuron_id, int current_neuron_id) {
         if (original_neuron_id == current_neuron_id) return true;
@@ -709,6 +737,9 @@ class Brain {
         if (source.neuron_id == target.neuron_id) {
             return;  
         }
+        for (Axon axon : source.neuron_connections) {
+            if (axon.target_id == target.neuron_id) return;
+        }
         // Assumes there is no connection already
         Axon new_axon = new Axon();
         
@@ -716,7 +747,7 @@ class Brain {
         
         new_axon.source_id = source.neuron_id;
         new_axon.target_id = target.neuron_id;
-        new_axon.weight = random(-1, +1);
+        new_axon.weight = random(-Settings.AXON_INITIAL_AMOUNT, +Settings.AXON_INITIAL_AMOUNT);
         source.neuron_connections.add(new_axon);
         target.static_connections_count++;
         num_axons++;
@@ -826,17 +857,16 @@ class Brain {
             add_new_connection_from_special_input();
         }
     }
-    void add_new_connection_from_special_input() {
-        Neuron source = get_random_special_neuron();        
+    void add_new_connection_from_special_input(Neuron source) {
         Neuron target = get_random_worker_neuron_or_output_neuron();
         assert(target != null);
         form_connection(source, target);
     }
-    void add_new_connection_from_world_input() {
-        assert(world_inputs.size() > 0);
-        
-        Input selection = get_random_world_input();       
-        
+    void add_new_connection_from_special_input() {
+        Neuron source = get_random_special_neuron();        
+        add_new_connection_from_special_input(source);
+    }
+    void add_new_connection_from_world_input(Input selection) {
         ArrayList<Integer> current_connections = new ArrayList<Integer>();
         for (Axon axon : selection.neuron_connections) {
             current_connections.add(axon.target_id);   
@@ -849,14 +879,63 @@ class Brain {
         }
         Axon new_axon = new Axon();
         new_axon.gene_id = getNextGeneID();
+        new_axon.source_id = selection.neuron_id;
         new_axon.target_id = target.neuron_id;
-        new_axon.weight = random(-1, +1);
+        new_axon.weight = random(-Settings.AXON_INITIAL_AMOUNT, +Settings.AXON_INITIAL_AMOUNT);
         target.static_connections_count++;
         
         selection.neuron_connections.add(new_axon);
         num_axons++;
     }
+    void add_new_connection_from_world_input() {
+        assert(world_inputs.size() > 0);
+        
+        Input selection = get_random_world_input();       
+        add_new_connection_from_world_input(selection);
+    }
+    boolean check_duplication_world_connection(WorldConnection worker, int channel) {
+        for (Input input : world_inputs) {
+            if (input.channel == channel && input.connection.equals(worker)) return true;
+        }
+        return false;
+    }
     Input add_new_input() {
+        if (world_inputs.size() == 0) {
+            Input new_input = new Input(getNextNeuronID());
+            new_input.connection = new WorldConnection(0,-1);
+            new_input.channel = floor(random(0,3));
+            world_inputs.add(new_input);
+            return new_input;
+        }
+        while (true) {
+            Input source = get_random_world_input();
+            WorldConnection connection = source.connection.deep_copy();
+            int x = floor(random(-1,2));    // [-1  0  +1]
+            int y = -floor(random(0,2));    //  [ 0 +1]
+            connection.set_x(connection.get_x() + x);
+            connection.set_y(connection.get_y() + y);
+            int channel = -1;
+            if (random(1) < 0.33) {
+                if (source.channel == 0) {
+                    channel = (fifty() ? 1 : 2);
+                } else if (source.channel == 1) {
+                    channel = (fifty() ? 0 : 2);
+                } else if (source.channel == 2) {
+                    channel = (fifty() ? 1 : 2);
+                }
+            } else {
+                channel = source.channel;
+            }
+            if (!check_duplication_world_connection(connection, channel)) {
+                Input new_input = new Input(getNextNeuronID());
+                new_input.connection = connection;
+                new_input.channel = channel;
+                world_inputs.add(new_input);
+                return new_input;
+            }
+            assert(source != null);
+        }
+        /*
         int new_channel = ((int)random(0,3));    // [0, 2]
         ArrayList<WorldConnection> choices = available_connections.get(new_channel);
         if (choices.size() == 0) return null;
@@ -870,10 +949,12 @@ class Brain {
             new_input.channel = new_channel;
             world_inputs.add(new_input);
             return new_input;
-        }  
+        }
+        */
     }
     float evaluate_position(Input input, int direction) {
         WorldConnection connection = input.connection;
+        assert(connection.get_length() > 0);
         Tile current = creature.tile;
         
         int current_x = current.get_x_index();
@@ -894,14 +975,15 @@ class Brain {
         }
         
         int target_index = (target_x) + (target_y * Settings.NUM_TILES);
-        return creature.species.world.tiles.get(target_index).get_color_by_channel(input.channel);
+        return (creature.species.world.tiles.get(target_index).get_color_by_channel(input.channel)
+                / connection.get_length());
     }
     void propagateSpecialInputs() {
         for (Map.Entry me : special_neurons.entrySet()) {
             Neuron neuron = (Neuron)me.getValue();
             int id = neuron.neuron_id;
             
-            assert(id >= 3 && id <= 16);
+            assert(id >= 3 && id <= 18);
             
             int begin = general_special_neuron_start_index;
             
@@ -912,9 +994,12 @@ class Brain {
             } else if (id == begin+1) {
                 propagate(neuron, inherited_values[0]);
             } else if (id == begin+2) {
-                propagate(neuron, inherited_values[1]);
+                //propagate(neuron, inherited_values[1]);
+                propagate(neuron, (creature.frames_since_last_food / Settings.CREATURE_STARVATION_TIMER));
             } else if (id == (begin+3)) {
-                propagate(neuron, inherited_values[2]);
+                //propagate(neuron, inherited_values[2]);
+                float val = (creature.get_energy_spent_asexually_reproducing() / Settings.CREATURE_MAX_FOOD);
+                propagate(neuron, val);
             } else if (id == (begin+4)) {
                 propagate(neuron, (creature.life / Settings.CREATURE_MAX_FOOD));
             } else if (id == (begin+5)) {
@@ -930,6 +1015,12 @@ class Brain {
             } else if (id == (begin+8)) {
                 float val = creature.direction / 4.0f;
                 propagate(neuron, val);
+            } else if (id == (begin+9)) {
+                float xx = (creature.tile.get_x_index() / ((float)Settings.NUM_TILES));
+                propagate(neuron, xx);
+            } else if (id == (begin+10)) {
+                float yy = (creature.tile.get_y_index() / ((float)Settings.NUM_TILES));
+                propagate(neuron, yy);
             } else {
                 println("Failed to propagate special neuron with id : " + id);
                 assert(false);
@@ -940,9 +1031,9 @@ class Brain {
         
          assert(creature != null);
          
-         assert(special_neurons.size() == 11);
-         assert(output_neurons.size() == 6);
-         assert(process_results.size() == 4);
+         assert(special_neurons.size() == 13);
+         assert(output_neurons.size() == 5);
+         assert(process_results.size() == 3);
          
          for (Map.Entry me : worker_neurons.entrySet()) {
              Neuron target = ((Neuron)me.getValue());
@@ -961,6 +1052,7 @@ class Brain {
          
          for (Input input : world_inputs) {
              float evaluation = evaluate_position(input, creature.direction);
+             assert(evaluation >= -1 && evaluation <= 1);
              send_input(input, evaluation);
          }         
          propagateSpecialInputs();
@@ -972,6 +1064,9 @@ class Brain {
              
              float resulting_data = target.current_data;
              resulting_data = negsig(resulting_data);
+             
+             //boolean greater = (resulting_data > Settings.CREATURE_MINIMUM_ACTION_THRESHOLD);
+             //if (greater) print(greater);
              
              process_results.set(index, resulting_data);    // TODO : Clamp current_data?
              index++;
@@ -992,8 +1087,8 @@ class Brain {
         for (Axon axon : axons) {
             if (!axon.enabled) continue;
             float data = current_data;    // TODO : should we clamp this data with sig function?
-            data *= axon.weight;
-            
+            data = negsig(data);
+            data *= axon.weight;            
             data = negsig(data);
             
             Neuron target = worker_neurons.get(axon.target_id);
@@ -1118,7 +1213,7 @@ class Brain {
         }
     }
     Neuron get_random_output_neuron() {
-        assert(output_neurons.size() == 6);
+        assert(output_neurons.size() == 5);
         Neuron selection = null;
         int _index = ((int)random(0, output_neurons.size()));
         for (Map.Entry me : output_neurons.entrySet()) {
@@ -1171,6 +1266,38 @@ class Brain {
        val *= 2;
        return val-1;
     }
+    String printout_brain(boolean print_to_console) {
+        String result = "";
+        result += "------------------------\n";
+        result += "Species size : " + creature.species.creatures.size() + "\n";
+        result += "------------------------\n";
+        result += "World Inputs\n";
+        for (Input input : world_inputs) {
+            result += "\t" + input.get_print() + "\n";
+            for (Axon axon : input.neuron_connections) {
+                result += "\t\t" + axon.get_print() + "\n";
+            }
+        }
+        result += "Special Inputs\n";
+        for (Map.Entry me : special_neurons.entrySet()) {
+            result += "\t" + ((Neuron)me.getValue()).get_print() + "\n";
+            for (Axon axon : ((Neuron)me.getValue()).neuron_connections) {
+                result += "\t\t" + axon.get_print() + "\n";
+            }
+        }
+        result += "Worker Neuorns\n";
+        for (Map.Entry me : worker_neurons.entrySet()) {
+            result += "\t" + ((Neuron)me.getValue()).get_print() + "\n";
+            for (Axon axon : ((Neuron)me.getValue()).neuron_connections) {
+                result += "\t\t" + axon.get_print() + "\n";
+            }
+        }
+        result += "------------------------\n";
+        if (print_to_console) {
+            println(result);
+        }
+        return result;
+    }
 }
 class Neuron {
     int neuron_id;
@@ -1179,6 +1306,9 @@ class Neuron {
     int dynamic_connections_count;           // The frame-number of connections into a neuron
     ArrayList<Axon> neuron_connections;
     
+    String get_print() {
+        return ("[" + neuron_id + "]");
+    }
     Neuron(int neuron_id) {
         this.neuron_id = neuron_id;
         current_data = 0;
@@ -1208,6 +1338,9 @@ class Axon {
     int target_id = -1;
     float weight = 0;
     boolean enabled = true;
+    String get_print() {
+        return ("[" + source_id + "-->" + target_id + "], (" + weight + ", " + enabled + ")");
+    }
     Axon deep_copy() {
         
         Axon new_axon = new Axon();
@@ -1239,6 +1372,9 @@ class Input {
     int neuron_id;
     ArrayList<Axon> neuron_connections = new ArrayList<Axon>();
 	WorldConnection connection = null;
+    String get_print() {
+        return ("[" + neuron_id + "(" + channel + ")]");
+    }
     Input(int neuron_id) {
         this.neuron_id = neuron_id;
     }
@@ -1251,13 +1387,36 @@ class Input {
         new_input.channel = channel;
         return new_input;
     }
+    @Override boolean equals(Object other) {
+        if (other == this) return true;
+        if (!(other instanceof Input)) return false;
+        Input casted = (Input)other;
+        return ((channel == casted.channel) && (connection.equals(casted.connection)));
+    }
 }
 class WorldConnection {
-    int x,y; 
+    private int x;
+    private int y;
+    private float length;
     WorldConnection(int x, int y) {
         this.x = x;
         this.y = y;
+        calc_length();
     }
+    int get_x(){ return x; }
+    int get_y(){ return y; }
+    void set_x(int x) {
+        this.x = x;
+        calc_length();
+    }
+    void set_y(int y) {
+        this.y = y;
+        calc_length();
+    }
+    private void calc_length() {
+        length = pow((x*x)+(y*y), 0.5f);
+    }
+    float get_length() { return length; }        
     @Override
     public boolean equals(Object other) {
         if (other == this) return true;
