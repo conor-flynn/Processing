@@ -85,3 +85,7 @@
         float angle = (degrees / 180.0) * PI;
         return (((float)x * sin(angle)) + ((float)y * cos(angle)));
     }
+    boolean fifty() {
+        int ran = floor(random(0,2));
+        return (ran == 0);
+    }

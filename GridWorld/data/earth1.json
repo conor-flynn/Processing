@@ -269,7 +269,7 @@
 								],
 							"food_fertility" : 1,
 							"food_neighbors" : 5,
-							"food_respawn_time" : 500
+							"food_respawn_time" : 300
 						}
 					]
 			},
@@ -347,7 +347,7 @@
 				"data" :
 					[
 						{
-							"life_time" : 1000,
+							"life_time" : 1,
 
 							"tile_color" : 
 								[
@@ -370,35 +370,8 @@
 									"0","0"
 								],
 							"food_fertility" : 1,
-							"food_neighbors" : 5,
-							"food_respawn_time" : 450
-						},
-						{
-							"life_time" : 1000,
-
-							"tile_color" : 
-								[
-									"45", 
-									"225", 
-									"0"
-								],
-							"tile_type" : 
-								[
-									"0","0"
-								],
-							"food_color" : 
-								[
-									"30", 
-									"25", 
-									"15"
-								],
-							"food_type" : 
-								[
-									"0","0"
-								],
-							"food_fertility" : 1,
-							"food_neighbors" : 6,
-							"food_respawn_time" : 450
+							"food_neighbors" : 7,
+							"food_respawn_time" : 300
 						}
 					]
 			},
@@ -451,7 +424,7 @@
 					[
 						{
 							"name": "Mountains, Infertile", 
-							"chance" : 0.85
+							"chance" : 0.95
 						},
 						{
 							"name" : "Mountain Plants",
@@ -539,11 +512,11 @@
 					[
 						{
 							"name": "Fresh Water", 
-							"chance" : 0.95
+							"chance" : 0.99
 						},
 						{
 							"name" : "Land, Water Plants",
-							"chance" : 0.05
+							"chance" : 0.01
 						}
 					]
 			},
@@ -575,11 +548,7 @@
 					[
 						{
 							"name": "Salt Water Ocean Plants", 
-							"chance" : 0.6
-						},
-						{
-							"name" : "Eroded Land",
-							"chance" : 0.4
+							"chance" : 1
 						}
 					]
 			},
@@ -627,11 +596,7 @@
 					[
 						{
 							"name": "Normal Land Plants", 
-							"chance" : 0.95
-						},
-						{
-							"name": "Eroded Land",
-							"chance" : 0.05
+							"chance" : 1
 						}
 					]
 			},

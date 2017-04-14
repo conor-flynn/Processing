@@ -100,6 +100,13 @@
             if (creature == null) {
                 return; 
             }
+            if (creature.markedForDeath) {
+                creature = null;
+                return;
+            }
+            for (Map.Entry me : creature.novelty.links.entrySet()) {
+                ((Tile)me.getKey()).debug_draw(color(0,0,255), 0.25);
+            }
             //creature.tile.debug_draw(color(100,100,100), 3);
             /*
             if (creature.markedForDeath) {
@@ -278,6 +285,8 @@
                     Tile spot = world.get_tile_at_point(newx, newy);
                     if (spot != null && spot.creature != null) {
                         //spot.creature.__debugging = true;
+                        println("NoveltyChain : " + spot.creature.novelty_counter);
+                        println("NoveltyChain size : " + spot.creature.novelty.size_of_novelty);
                         return spot.creature;
                     }
                 }

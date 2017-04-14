@@ -24,7 +24,7 @@ class Species {
         Tile tile = findCreatureSpawn();
         if (tile == null) return;
         
-        Creature creature = new Creature(this);
+        Creature creature = new Creature(this, new NoveltyChain(world));
         
         tile.creatureEntering(creature);
         

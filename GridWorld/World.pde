@@ -513,7 +513,8 @@
         void report() {
             long elapsed_time = millis() - previous_report_time;
             float frames_per_second = ((float)frames_since_report) / (elapsed_time / 1000);
-            println("Time elapsed(" + ((float)elapsed_time/1000) + "), Frames since report(" + frames_since_report + "), Frames per second(" + frames_per_second + ")");
+            float seconds_since_simulation_start = (millis() / 1000.0);
+            println("Time elapsed(" + ((float)elapsed_time/1000) + " / " + seconds_since_simulation_start + "), Frames since report(" + frames_since_report + "), Frames per second(" + frames_per_second + ")");
             print("\t(");
             for (int i = 0; i < world.species.size(); i++) {
                 print(world.species.get(i).creatures.size());

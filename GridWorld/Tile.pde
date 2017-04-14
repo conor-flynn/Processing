@@ -79,7 +79,7 @@
                 shouldRedraw = false;
             //}
         }
-        void debug_draw(color c, int d) {
+        void debug_draw(color c, float d) {
             fill(c);
             rect(x-(w*d), y-(w*d), w*d*2, w*d*2);
         }

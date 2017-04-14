@@ -57,17 +57,28 @@
              
              static final float OVER_EAT_PUNISHMENT = 0.10f;
              
-             static final int CREATURE_DEATH_AGE = (int)(50 * CREATURE_STARVATION_TIMER);
+             static final int CREATURE_DEATH_AGE = (int)(20 * CREATURE_STARVATION_TIMER);
              
-             static final float CREATURE_COLOR_MUTATION_AMOUNT = 20;
+             static final float CREATURE_COLOR_MUTATION_AMOUNT = 2;
              
              
              static final float CREATURE_MUTATION_RATE_BASE = 0.01f;
-             static final float CREATURE_MUTATION_RATE_ADDITIONAL_MUTATION_RATE = 0.8f;
+             static final float CREATURE_MUTATION_RATE_ADDITIONAL_MUTATION_RATE = 0.01f;
              
              static final float AXON_INITIAL_AMOUNT = 0.01f;
-             static final float AXON_MUTATION_AMOUNT = (AXON_INITIAL_AMOUNT / 10.0f);
+             static final float AXON_MUTATION_AMOUNT = 0.0001;
              
-             static final int CREATURE_BRAIN_SIZE_IGNORE = 20;
+             static final int CREATURE_BRAIN_SIZE_IGNORE = 450;
              static final float CREATURE_BRAIN_SIZE_PORTION = 30.0f;
+             
+             // ------
+             static final int TILE_NOVELTY_EXPIRATION_FRAME_COUNT = 450;
+             static final int NOVELTY_LOSS_PER_FRAME = 1;
+             static final int NOVELTY_STARTING_POINT = 100;
+             static final int TILE_NOVELTY_EXPIRATION_EXPONETIAL_FACTOR = 1;
+             static final float NOVELTY_SEPARATION_RATE = 0.0;
+             // ------
+             static final int NOVELTY_REWARD_NEW_TILE = 100;
+             static final int NOVELTY_REWARD_KILL_CREATURE = 1;
+             // ------
     }

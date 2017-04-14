@@ -20,9 +20,10 @@ class Creature {
     boolean made_action_sometime_during_life = false;
     int frames_since_last_food = 0;
     
-    Novelty novelty;
+    NoveltyChain novelty;
+    int novelty_counter;
     
-    public Creature(Species species) {
+    public Creature(Species species, NoveltyChain inherited) {
         this.species = species;
       
         markedForDeath = false;
@@ -32,6 +33,9 @@ class Creature {
         life = -1;
         age = 0;
         generation = 0;
+        
+        novelty = inherited;
+        novelty_counter = Settings.NOVELTY_STARTING_POINT;
     }
     void killCreature() {
         if (markedForDeath) return;
@@ -93,7 +97,9 @@ class Creature {
         
         if (lose_standard_life()) return;
         
-        assert(this.life > 0);
+        novelty.update();
+        novelty_counter -= Settings.NOVELTY_LOSS_PER_FRAME;
+        
         age++;
         if (asexual_reproductive_count >= Settings.CREATURE_ASEXUAL_REPRODUCTIVE_LIMIT) {
             killCreature();
@@ -104,6 +110,10 @@ class Creature {
             return;
         }
         if (age > Settings.CREATURE_DEATH_AGE) {
+            killCreature();
+            return;
+        }
+        if (novelty_counter <= 0) {
             killCreature();
             return;
         }
@@ -184,7 +194,14 @@ class Creature {
             return true;
         }
         
-        Creature newCreature = new Creature(species);
+        NoveltyChain gift = novelty;
+        if (random(1) < Settings.NOVELTY_SEPARATION_RATE) {
+            gift = new NoveltyChain(species.world);
+        }
+        Creature newCreature = new Creature(species, gift);
+            if (novelty_counter < Settings.NOVELTY_STARTING_POINT) {
+                newCreature.novelty_counter = novelty_counter;
+            }
             newCreature.brain = new Brain(brain, newCreature);
             newCreature.copy_color(this);            
             newCreature.brain.mutate_count(1);
@@ -220,7 +237,7 @@ class Creature {
             return;
         }
         
-        Creature newCreature = new Creature(species);
+        Creature newCreature = new Creature(species, novelty);
             newCreature.brain = new Brain(this.brain, other.brain, newCreature);
             newCreature.copy_color(this);            
             newCreature.brain.mutate_count(1);
@@ -309,6 +326,9 @@ class Creature {
         add_life(-val);
         tile.creatureLeaving(this);
         destination.creatureEntering(this);
+        if (novelty.add_tile(destination)) {
+            novelty_counter += Settings.NOVELTY_REWARD_NEW_TILE;
+        }
     }
     void eat_food_at_empty_tile(Tile destination) {
         float val = destination.eatFood(brain.food_type);
@@ -327,6 +347,7 @@ class Creature {
         add_life(target.life * Settings.CREATURE_EAT_CREATURE_MULTIPLIER);
         target.killCreature();
         if (Settings.DEVELOPER_DEBUG_DRAW) tile.debug_draw(color(255,0,0),5);
+        novelty_counter += Settings.NOVELTY_REWARD_KILL_CREATURE;
     }
     
     
@@ -524,43 +545,60 @@ class Creature {
         line(centerx, centery, centerx+dirx, centery+diry);
     }
     float get_energy_spent_asexually_reproducing() {
-        float v = (1 + ((brain.adjusted_brain_size()) / Settings.CREATURE_BRAIN_SIZE_PORTION));
-        if (v > (Settings.CREATURE_MAX_FOOD-1)) return (Settings.CREATURE_MAX_FOOD-1);
-        else return v;
+        //float v = (1 + ((brain.adjusted_brain_size()) / Settings.CREATURE_BRAIN_SIZE_PORTION));
+        //if (v > (Settings.CREATURE_MAX_FOOD-1)) return (Settings.CREATURE_MAX_FOOD-1);
+        //else return v;
+        return 2;
     }
     int genome_distance(Creature other) {
         return floor(random(0, 30));
     }
 }
-class Novel {
+class NoveltyLink {
     Tile current;
-    Novel younger;
-    Novel older;
+    NoveltyLink younger;
+    NoveltyLink older;
     long expire_frame;
 }
-class Novelty {
+class NoveltyChain {
+    
     World world;
-    Novel oldest;
-    Novel youngest;
-    HashMap<Tile, Novel> links;
-    Novelty deep_copy() {
-        Novelty new_novelty = new Novelty();
+    NoveltyLink oldest;
+    NoveltyLink youngest;
+    HashMap<Tile, NoveltyLink> links = new HashMap<Tile, NoveltyLink>();
+    long updated_on_frame;
+    int size_of_novelty;
+    
+    NoveltyChain(World world) {
+        this.world = world;
+    }
+    NoveltyChain deep_copy() {
+        NoveltyChain new_novelty = new NoveltyChain(world);
         
         new_novelty.world = world;
-        
-        Novel worker = youngest;
+        new_novelty.size_of_novelty = size_of_novelty;
+        NoveltyLink worker = youngest;
         while (worker != null) {
-            links.put(worker.current, make_new_novel(worker.current, worker.expire_frame));
+            // this shit flawed
+            links.put(worker.current, make_new_novel(worker.current));
         }
         
         return new_novelty;
     }
+    long get_new_expiration_frame() {
+        return (world.generation + Settings.TILE_NOVELTY_EXPIRATION_FRAME_COUNT);
+    }
     void update() {
+        if (world.generation == updated_on_frame) return;
+        
+        updated_on_frame = world.generation;
+        
         if (youngest == null) return;
         
         int gen = world.generation;
         while(youngest != null && (youngest.expire_frame <= gen)) {
             links.remove(youngest.current);
+            size_of_novelty--;
             
             if (youngest.older == null) {
             
@@ -589,37 +627,47 @@ class Novelty {
             }
         }
     }
-    boolean add_tile(Tile worker, long expire_frame) {
+    boolean add_tile(Tile worker) {
         // returns true if this is novel
-        Novel target = links.get(worker);
+        NoveltyLink target = links.get(worker);
         if (target == null) {
-            target = make_new_novel(worker, expire_frame);
+            size_of_novelty++;
+            target = make_new_novel(worker);
             links.put(worker, target);
             return true;
         } else {
-            update_novel(target, expire_frame);
+            update_novel(target);
             return false;
         }
     }
-    void update_novel(Novel worker, long expire_frame) {
+    void update_novel(NoveltyLink worker) {
         Tile temp = worker.current;
-        assert(worker.expire_frame != expire_frame);    // Right?????????????///
         links.remove(temp);
         
-        if (worker.younger == null) {
-            youngest = null;
-        } else if (worker.older == null) {
+        boolean has_younger = (worker.younger != null);
+        boolean has_older = (worker.older != null);
+        
+        if (!has_younger && !has_older) {
+            worker.expire_frame = get_new_expiration_frame();
+            return;
+        } else if (!has_younger) {
+            youngest = youngest.older;
+            worker = null;
+        } else if (!has_older) {
             oldest = oldest.younger;
-            oldest.older = null;
+            worker = null;
+        } else {
+            worker.younger.older = worker.older;
+            worker.older.younger = worker.younger;
+            worker = null;
         }
-        worker = null;
-        Novel new_novel = make_new_novel(temp, expire_frame);
+        NoveltyLink new_novel = make_new_novel(temp);
         links.put(temp, new_novel);        
     }
-    Novel make_new_novel(Tile _worker, long expire_frame) {
-        Novel new_novel = new Novel();
+    NoveltyLink make_new_novel(Tile _worker) {
+        NoveltyLink new_novel = new NoveltyLink();
         new_novel.current = _worker;
-        new_novel.expire_frame = expire_frame;
+        new_novel.expire_frame = get_new_expiration_frame();
         
         if (youngest == null) {
     
@@ -683,7 +731,7 @@ class Novelty {
                 // The respawn time is less than the oldest tile, 
                 // so it has to be inserted somewhere into the chain
                 
-            Novel worker = oldest;
+            NoveltyLink worker = oldest;
             
             while (true) {
             
@@ -724,6 +772,9 @@ class CreatureLink {
     CreatureLink left;    int left_distance;
     CreatureLink right;   int right_distance;    
     
+    CreatureLink(Creature source) {
+        creature = source;
+    }
     void set_left(CreatureLink source) {
         left = source;
         left_distance = creature.genome_distance(left.creature);
@@ -733,7 +784,7 @@ class CreatureLink {
         right_distance = creature.genome_distance(right.creature);
     }
 }
-class Genome {
+class GenomeChain {
     
     CreatureLink origin;
     int num_creatures;
@@ -748,9 +799,8 @@ class Genome {
             worker = worker.right;
         }
         
-        CreatureLink new_link = new CreatureLink();
+        CreatureLink new_link = new CreatureLink(creature);
         
-        new_link.creature = creature;
         new_link.set_left(worker);
         new_link.set_right(worker.right);
         
@@ -758,13 +808,50 @@ class Genome {
         new_link.right.set_left(new_link);
         
     }
-    
+    void insert_link(CreatureLink left, CreatureLink center, CreatureLink right) {
+        left.set_right(center);
+        center.set_left(left);
+        center.set_right(right);
+        right.set_left(center);
+        num_creatures++;
+    }
+    void remove_link(CreatureLink target) {
+        target.left.set_right(target.right);
+        target.right.set_left(target.left);
+        num_creatures--;
+    }
     void add_offspring(CreatureLink parent, Creature child_creature) {
+        CreatureLink new_link = new CreatureLink(child_creature);
         int distance = parent.creature.genome_distance(child_creature);
         if (distance == 0) {
             // Just put it on the left or right
+            if (parent.left_distance < parent.right_distance) {                
+                insert_link(parent.left, new_link, parent);                
+                return;
+                
+            } else if (parent.right_distance < parent.left_distance) {                
+                insert_link(parent, new_link, parent.right);                
+                return;
+                
+            } else {
+                if (fifty()) {
+                    insert_link(parent.left, new_link, parent);
+                } else {
+                    insert_link(parent, new_link, parent.right);
+                }
+            }
         } else {
-            
+            if (parent.left_distance > parent.right_distance) {
+                insert_link(parent.left, new_link, parent);
+            } else if (parent.right_distance > parent.left_distance) {
+                insert_link(parent, new_link, parent.right);
+            } else {
+                if (fifty()) {
+                    insert_link(parent.left, new_link, parent);
+                } else {
+                    insert_link(parent, new_link, parent.right);
+                }
+            }
         }
     }
 }
